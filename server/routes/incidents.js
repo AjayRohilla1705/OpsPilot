@@ -150,10 +150,9 @@ router.post('/', async (req, res, next) => {
       });
     }
     res.status(201).json({ ok: true, item });
-    // Fire-and-forget mail send — never blocks the API response. Failures
-    // are logged inside notifyIncident; we don't surface them to the client
-    // because the incident has already been persisted successfully.
-    notifyIncident(item, 'created');
+
+console.log("=== MAIL FUNCTION CALLED ===");
+notifyIncident(item, 'created');
   } catch (e) { next(e); }
 });
 
