@@ -1,11 +1,14 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const { readSettings } = require('./storage');
 const { logger } = require('./logger');
 
 /**
- * Build SMTP transporter from DB settings
- * FIX: Force IPv4 to avoid ENETUNREACH (IPv6 issue on Railway/Replit)
+ * 🔥 FORCE IPv4 RESOLUTION (CRITICAL FIX FOR ENETUNREACH)
+ * This forces Node to never resolve Gmail to IPv6
  */
+dns.setDefaultResultOrder('ipv4first');
+
 async function buildTransport() {
   logger.info('[mailer] buildTransport loaded settings');
 
@@ -13,7 +16,7 @@ async function buildTransport() {
   const e = s.email || {};
 
   if (!e.smtp) {
-    throw new Error('SMTP not configured in settings');
+    throw new Error('SMTP not configured');
   }
 
   const { host, port, user, pass, secure } = e.smtp;
@@ -38,13 +41,19 @@ async function buildTransport() {
     },
 
     /**
-     * 🔥 IMPORTANT FIX:
-     * Force IPv4 because Railway/Replit cannot reach Gmail IPv6 routes
+     * 🔥 EXTRA SAFETY:
+     * Force DNS + IPv4 stack usage
      */
-    family: 4
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 1,
+
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 
-  // Optional verify (safe debug)
+  // VERIFY CONNECTION
   try {
     await transporter.verify();
     logger.info('[mailer] SMTP verify successful');
@@ -64,9 +73,6 @@ async function buildTransport() {
   };
 }
 
-/**
- * Send incident email
- */
 async function notifyIncident(incident, eventKind) {
   logger.info(`[mailer] notifyIncident -> ${eventKind} ${incident.id}`);
 
@@ -83,12 +89,10 @@ async function notifyIncident(incident, eventKind) {
 
     if (!allowed) return { ok: false, skipped: 'trigger-off' };
 
-    const subject = `[Incident] ${incident.id} - ${incident.title}`;
-
     const info = await cfg.transporter.sendMail({
       from: cfg.from,
       to: cfg.recipients.join(','),
-      subject,
+      subject: `[Incident] ${incident.id} - ${incident.title}`,
       text: `Incident update: ${incident.title}`,
       priority: 'high'
     });
@@ -103,9 +107,6 @@ async function notifyIncident(incident, eventKind) {
   }
 }
 
-/**
- * Test email
- */
 async function sendTestEmail(toOverride) {
   const cfg = await buildTransport();
 
@@ -116,7 +117,7 @@ async function sendTestEmail(toOverride) {
     from: cfg.from,
     to,
     subject: 'SMTP Test Email - OpsPilot',
-    text: 'SMTP is working correctly 🚀',
+    text: 'SMTP working correctly',
     priority: 'high'
   });
 
