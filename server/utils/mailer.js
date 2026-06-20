@@ -241,14 +241,63 @@ function buildIncidentEmail(incident, orgName, eventKind) {
  * to surface or swallow.
  */
 async function buildTransport() {
+ async function buildTransport() {
+
+  console.log("STEP 1 - Entered buildTransport");
+
   const s = await readSettings();
+
+  console.log("STEP 2 - Settings loaded");
+  console.log(JSON.stringify(s.email, null, 2));
+
   const e = s.email || {};
+
+  console.log("STEP 3 - Email object created");
+
   if (!e.smtp || !e.smtp.host || !e.smtp.port) {
     throw new Error('SMTP host/port not configured in Settings → Email Delivery.');
   }
+
+  console.log("STEP 4 - SMTP config OK");
+
   if (!e.smtp.user || !e.smtp.pass) {
-    throw new Error('SMTP user/password not configured in Settings → Email Delivery. (For Gmail, generate an App Password.)');
+    throw new Error(
+      'SMTP user/password not configured in Settings → Email Delivery.'
+    );
   }
+
+  console.log("STEP 5 - Username and password OK");
+
+  return {
+    transporter: nodemailer.createTransport({
+      host: e.smtp.host,
+      port: e.smtp.port,
+      secure: !!e.smtp.secure,
+
+      auth: {
+        user: e.smtp.user,
+        pass: e.smtp.pass
+      },
+
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000
+    }),
+
+    from: e.from || e.smtp.user,
+    recipients: e.recipients || [],
+    enabled: !!e.enabled,
+    triggers: e.triggers || {},
+    incidentEmailsOn: !!(
+      s.notifications &&
+      s.notifications.incidentEmails
+    ),
+
+    orgName:
+      (s.organization && s.organization.name) ||
+      'OpsPilot EMS'
+  };
+}
   return {
     transporter: nodemailer.createTransport({
       host: e.smtp.host,
