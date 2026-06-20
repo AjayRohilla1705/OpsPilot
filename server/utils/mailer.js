@@ -272,6 +272,9 @@ async function buildTransport() {
  * notification format.
  */
 async function notifyIncident(incident, eventKind) {
+  logger.info(
+  `[mailer] notifyIncident called -> ${eventKind} ${incident.id}`
+);
   try {
     const cfg = await buildTransport();
     if (!cfg.enabled)           { logger.info('[mailer] skip — email.enabled=false');            return { ok: false, skipped: 'disabled' }; }
@@ -296,8 +299,15 @@ async function notifyIncident(incident, eventKind) {
     logger.info(`[mailer] sent "${eventKind}" #${incident.id} → ${cfg.recipients.length} recipient(s) · messageId=${info.messageId}`);
     return { ok: true, messageId: info.messageId, recipients: cfg.recipients };
   } catch (err) {
-    logger.error(`[mailer] failed to send "${eventKind}" #${incident && incident.id}: ${err.message}`);
-    return { ok: false, error: err.message };
+    logger.error(
+    `[mailer] failed to send "${eventKind}" #${incident && incident.id}`
+  );
+
+  logger.error('[mailer full error]', err);
+
+  return {
+    ok: false,
+    error: err.message };
   }
 }
 
