@@ -2,44 +2,51 @@ const nodemailer = require('nodemailer');
 const { readSettings } = require('./storage');
 const { logger } = require('./logger');
 
-const SEV_LABEL = { 'P1': 'Critical', 'P2': 'High', 'P2-Low': 'Elevated', 'P3': 'Medium' };
-
-function esc(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
-
-function pad(n) {
-  return String(n).padStart(2, '0');
-}
-
-/** Build SMTP transport from settings */
 async function buildTransport() {
+  logger.info('[mailer] buildTransport called');
+
   const s = await readSettings();
   const e = s.email || {};
 
-  logger.info('[mailer] buildTransport loaded settings');
+  logger.info('[mailer] email config loaded');
 
-  if (!e.smtp || !e.smtp.host || !e.smtp.port) {
-    throw new Error('SMTP host/port not configured in Settings');
+  if (!e.smtp) {
+    throw new Error('SMTP not configured');
   }
 
-  if (!e.smtp.user || !e.smtp.pass) {
-    throw new Error('SMTP user/password not configured in Settings');
+  const { host, port, user, pass, secure } = e.smtp;
+
+  if (!host || !port) {
+    throw new Error('SMTP host/port missing');
   }
+
+  if (!user || !pass) {
+    throw new Error('SMTP user/password missing');
+  }
+
+  logger.info(`[mailer] connecting to ${host}:${port} as ${user}`);
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: !!secure,
+    auth: {
+      user,
+      pass
+    }
+  });
+
+  // IMPORTANT: verify connection early
+  await transporter.verify()
+    .then(() => logger.info('[mailer] SMTP verified successfully'))
+    .catch(err => {
+      logger.error('[mailer] SMTP verify failed', err);
+      throw err;
+    });
 
   return {
-    transporter: nodemailer.createTransport({
-      host: e.smtp.host,
-      port: e.smtp.port,
-      secure: !!e.smtp.secure,
-      auth: {
-        user: e.smtp.user,
-        pass: e.smtp.pass
-      }
-    }),
-    from: e.from || e.smtp.user,
+    transporter,
+    from: e.from || user,
     recipients: e.recipients || [],
     enabled: !!e.enabled,
     triggers: e.triggers || {},
@@ -48,47 +55,59 @@ async function buildTransport() {
   };
 }
 
-/** MAIN MAIL FUNCTION */
+// ---------------- EMAIL SEND ----------------
 async function notifyIncident(incident, eventKind) {
   logger.info(`[mailer] notifyIncident -> ${eventKind} ${incident.id}`);
 
   try {
     const cfg = await buildTransport();
 
-    if (!cfg.enabled) return;
-    if (!cfg.incidentEmailsOn) return;
-    if (!cfg.recipients.length) return;
+    if (!cfg.enabled) return { ok: false, skipped: 'disabled' };
+    if (!cfg.recipients.length) return { ok: false, skipped: 'no-recipients' };
 
-    const { transporter, from, recipients, orgName } = cfg;
+    const allowed =
+      (eventKind === 'created' && cfg.triggers.onCreate !== false) ||
+      (eventKind === 'stateChanged' && cfg.triggers.onStateChange !== false) ||
+      (eventKind === 'resolved' && cfg.triggers.onResolved !== false);
+
+    if (!allowed) return { ok: false, skipped: 'trigger-off' };
 
     const subject = `Incident ${incident.id} - ${incident.title}`;
 
-    await transporter.sendMail({
-      from,
-      to: recipients.join(','),
+    const info = await cfg.transporter.sendMail({
+      from: cfg.from,
+      to: cfg.recipients.join(','),
       subject,
-      text: `Incident update: ${incident.id}`,
-      html: `<h3>${esc(incident.title)}</h3>`
+      text: `Incident Update: ${incident.title}`,
+      priority: 'high'
     });
 
-    logger.info(`[mailer] sent email for ${incident.id}`);
+    logger.info('[mailer] sent mail success', info.messageId);
+
+    return { ok: true, messageId: info.messageId };
+
   } catch (err) {
-    logger.error(`[mailer] failed ${incident.id}`);
-    logger.error(err);
+    logger.error('[mailer ERROR]', err);
+    return { ok: false, error: err.message };
   }
 }
 
-/** TEST EMAIL */
+// ---------------- TEST EMAIL ----------------
 async function sendTestEmail(toOverride) {
   const cfg = await buildTransport();
-  const to = toOverride || cfg.recipients.join(',');
 
-  return cfg.transporter.sendMail({
+  const to = toOverride || cfg.recipients.join(',');
+  if (!to) throw new Error('No recipient found');
+
+  const info = await cfg.transporter.sendMail({
     from: cfg.from,
     to,
     subject: 'SMTP Test Email',
-    text: 'SMTP is working'
+    text: 'SMTP working correctly',
+    priority: 'high'
   });
+
+  return { ok: true, messageId: info.messageId };
 }
 
 module.exports = {
