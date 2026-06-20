@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OpsPilot · Incident</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    try { if (localStorage.getItem('sentinel.theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <div id="sidebar-root"></div>
+
+    <main>
+      <div class="crumbs mb-2">
+        <a href="/dashboard.html">Console</a>
+        <span class="sep">/</span>
+        <a href="/dashboard.html#incidents-table">Incidents</a>
+        <span class="sep">/</span>
+        <span id="crumbId">—</span>
+      </div>
+
+      <header class="topbar sticky" id="incidentHeader">
+        <div class="title-block flex-1">
+          <div class="row gap-3" style="align-items:center; flex-wrap:wrap;">
+            <span class="mono dim" id="incidentId">#—</span>
+            <span id="severityChip"></span>
+            <span id="stateChip"></span>
+            <span class="dim mono" id="updatedAt"></span>
+          </div>
+          <h1 class="serif" id="incidentTitle" contenteditable="false" style="margin-top:0.45rem; outline: none;">—</h1>
+          <div class="metaline mt-1" id="metaLine"></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-sm" id="printBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print RCA
+          </button>
+          <button class="btn btn-sm btn-danger" id="deleteBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            Delete
+          </button>
+          <button class="btn btn-primary btn-magnetic ripple" id="saveBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span id="saveLabel">Save changes</span>
+            <span id="saveSpinner" class="dot-loader hidden"><span></span><span></span><span></span></span>
+          </button>
+        </div>
+      </header>
+
+      <div class="tabs" id="tabs">
+        <span class="tab-indicator" id="tabIndicator"></span>
+        <button class="tab active" data-tab="overview">Overview</button>
+        <button class="tab" data-tab="rca">RCA & Learnings</button>
+        <button class="tab" data-tab="timeline">Timeline & Events</button>
+        <button class="tab" data-tab="comments">Discussion <span class="mono dim" id="commentCount"></span></button>
+        <button class="tab" data-tab="attachments">Attachments <span class="mono dim" id="attachCount"></span></button>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-main">
+          <!-- Overview tab -->
+          <div data-pane="overview">
+            <div class="section">
+              <h3>Affected services</h3>
+              <div class="sub">Components in scope for this incident.</div>
+              <div id="affectedServicesView"></div>
+            </div>
+
+            <div class="section">
+              <h3>Incident description</h3>
+              <textarea class="textarea" id="incidentDescription" placeholder="What happened, in plain language…"></textarea>
+            </div>
+
+            <div class="section">
+              <h3>Bridge details</h3>
+              <textarea class="textarea" id="bridgeDetails" placeholder="Who joined the bridge, when, and what was decided…"></textarea>
+            </div>
+
+            <div class="section">
+              <h3>Steps to resolve incident</h3>
+              <div class="sub">Add one step per line. Press Enter to create a new step.</div>
+              <div id="stepsEditor"></div>
+              <button class="btn btn-sm mt-2" id="addStepBtn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add step
+              </button>
+            </div>
+
+            <div class="section">
+              <h3>Next steps</h3>
+              <textarea class="textarea" id="nextSteps" placeholder="What happens next?"></textarea>
+            </div>
+          </div>
+
+          <!-- RCA tab -->
+          <div data-pane="rca" class="hidden">
+            <div class="section">
+              <h3>Root cause analysis</h3>
+              <textarea class="textarea" id="rootCauseAnalysis" placeholder="The actual underlying cause — not the symptom." style="min-height: 160px;"></textarea>
+            </div>
+            <div class="section">
+              <h3>Business impact</h3>
+              <textarea class="textarea" id="businessImpact" placeholder="Revenue, customers affected, SLOs missed…"></textarea>
+            </div>
+            <div class="section">
+              <h3>Learnings <span class="dim" style="font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em;">· TECHNICAL · PROCEDURAL · ORGANIZATIONAL</span></h3>
+              <textarea class="textarea" id="learnings" placeholder="What did we learn? Be honest — psychological safety first." style="min-height: 140px;"></textarea>
+            </div>
+            <div class="section">
+              <h3>Corrective action plan</h3>
+              <textarea class="textarea" id="correctiveActionPlan" placeholder="Specific, owned actions with dates."></textarea>
+            </div>
+            <div class="section">
+              <h3>EMS / Incident manager fields</h3>
+              <div class="kv-list" id="emsFieldsList"></div>
+            </div>
+          </div>
+
+          <!-- Timeline tab -->
+          <div data-pane="timeline" class="hidden">
+            <div class="section">
+              <h3>Outage timeline</h3>
+              <textarea class="textarea" id="outageTimeline" placeholder="Plain-text timeline (one event per line)…" style="min-height: 140px;"></textarea>
+            </div>
+            <div class="section">
+              <h3>EMS events</h3>
+              <div class="sub">A structured event log captured during incident response.</div>
+              <div id="emsEventsList" class="timeline mb-2"></div>
+              <div class="row gap-2">
+                <input type="datetime-local" id="newEventTs" class="input" style="max-width: 220px;" data-dtp />
+                <input type="text" id="newEventBody" class="input" placeholder="What happened?" />
+                <button class="btn" id="addEventBtn">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Discussion tab -->
+          <div data-pane="comments" class="hidden">
+            <div class="section">
+              <h3>Discussion</h3>
+              <div class="sub">Threaded notes from the team. Use this instead of chat to keep context with the incident.</div>
+              <div class="row gap-2 mb-2" style="align-items:flex-start;">
+                <div class="avatar" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#FF7A47,#FFB547);display:grid;place-items:center;font-family:var(--font-mono);font-size:0.72rem;color:#1A0A02;font-weight:700;" id="meAvatar">EM</div>
+                <div class="flex-1">
+                  <textarea class="textarea" id="commentBody" placeholder="Add a comment…" style="min-height: 80px;"></textarea>
+                  <div class="row mt-1" style="justify-content: flex-end;">
+                    <button class="btn btn-sm btn-primary" id="addCommentBtn">Post comment</button>
+                  </div>
+                </div>
+              </div>
+              <div id="commentsList"></div>
+            </div>
+          </div>
+
+          <!-- Attachments tab -->
+          <div data-pane="attachments" class="hidden">
+            <div class="section">
+              <h3>Attachments</h3>
+              <div class="sub">Drop screenshots, logs, dashboards. Stored locally on this server (max 25 MB each).</div>
+              <div class="dropzone" id="dropzone">
+                <div class="serif" style="font-size: 1.2rem; color: var(--text);">Drop files here</div>
+                <div class="dim" style="margin-top: 0.25rem;">or <span style="color: var(--ember); text-decoration: underline;">browse</span></div>
+                <input type="file" id="fileInput" multiple style="display:none" />
+              </div>
+              <div class="mt-2" id="attachmentsList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Side panel -->
+        <aside class="detail-side">
+          <div class="section">
+            <h3>State</h3>
+            <select class="select" id="stateSelect">
+              <option>Live</option>
+              <option>On Hold</option>
+              <option>RCA in Progress</option>
+              <option>RCA Submitted</option>
+              <option>RCA Review-Issues</option>
+              <option>RCA Not Required</option>
+              <option>CA In Progress</option>
+              <option>Resolved</option>
+            </select>
+            <div class="field mt-2">
+              <label>Reason</label>
+              <input type="text" class="input" id="reasonInput" placeholder="Optional note about this state" />
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Incident details</h3>
+            <div class="kv-list">
+              <div class="kv"><div class="k">Outage Type</div><div class="v"><select class="select" id="outageType"><option>IT EVENT</option><option>OUTAGE</option><option>DEGRADATION</option></select></div></div>
+              <div class="kv"><div class="k">Severity</div><div class="v"><select class="select" id="severitySelect"><option>P1</option><option>P2</option><option>P2-Low</option><option>P3</option></select></div></div>
+              <div class="kv"><div class="k">Owner</div><div class="v"><input type="text" class="input" id="ownerInput" placeholder="Assignee name" /></div></div>
+              <div class="kv"><div class="k">Area</div><div class="v"><input type="text" class="input" id="areaInput" /></div></div>
+              <div class="kv"><div class="k">Iteration</div><div class="v"><input type="text" class="input" id="iterationInput" /></div></div>
+              <div class="kv"><div class="k">Start</div><div class="v"><input type="datetime-local" class="input" data-dtp id="incidentStart" /></div></div>
+              <div class="kv"><div class="k">End</div><div class="v"><input type="datetime-local" class="input" data-dtp id="incidentEnd" /></div></div>
+              <div class="kv"><div class="k">Revenue impact</div><div class="v"><input type="text" class="input" id="revenueImpact" placeholder="$ value or 'indirect'" /></div></div>
+              <div class="kv"><div class="k">Function impacted</div><div class="v"><input type="text" class="input" id="functionImpacted" /></div></div>
+              <div class="kv"><div class="k">Location impacted</div><div class="v"><input type="text" class="input" id="locationImpacted" placeholder="No selection made" /></div></div>
+              <div class="kv"><div class="k">Tech area impacted</div><div class="v"><input type="text" class="input" id="techAreaImpacted" /></div></div>
+              <div class="kv"><div class="k">RCA completed</div><div class="v"><input type="date" class="input" id="rcaCompletedDate" /></div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Tags</h3>
+            <div class="tag-input" id="tagInput">
+              <input type="text" id="tagField" placeholder="Add tag…" />
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Notifications</h3>
+            <div class="row" style="justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 0.92rem;">Send notifications</div>
+                <div class="dim" style="font-size: 0.78rem;">EMS / GSM only · default off</div>
+              </div>
+              <div class="toggle" id="notifToggle" role="switch" aria-checked="false" tabindex="0"></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Approvals</h3>
+            <div class="row" style="justify-content: space-between;">
+              <div>CIO Approval</div>
+              <div class="toggle" id="cioToggle" role="switch" aria-checked="false" tabindex="0"></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Related work</h3>
+            <div id="relatedList" class="kv-list"></div>
+            <div class="row gap-2 mt-2">
+              <input type="text" id="relatedTitle" class="input" placeholder="Child / parent title" />
+              <button class="btn btn-sm" id="addRelatedBtn">Add</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- Delete confirmation modal -->
+  <div id="confirmModal" class="modal-back hidden">
+    <div class="modal">
+      <p class="eyebrow">Confirm</p>
+      <h2 class="serif" style="font-size: 1.8rem; margin-top: 0.25rem;">Delete this incident?</h2>
+      <p class="mt-2">This will permanently remove <span class="mono" id="modalId">#—</span> and all comments / attachments. This cannot be undone.</p>
+      <div class="row mt-3" style="justify-content: flex-end;">
+        <button class="btn btn-ghost" id="cancelDelete">Cancel</button>
+        <button class="btn btn-danger" id="confirmDelete">Delete permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/motion.js" defer></script>
+  <script src="/js/datetimepicker.js"></script>
+  <script src="/js/incident.js"></script>
+
+  <style>
+    .app, main { position: relative; z-index: 1; }
+
+    /* Tab indicator — animated underline that slides between tabs */
+    .tabs { position: relative; }
+    .tabs .tab { z-index: 2; transition: color 0.25s var(--easing); }
+    .tab-indicator {
+      position: absolute;
+      bottom: -1px;
+      height: 2px;
+      background: var(--ember);
+      box-shadow: 0 0 12px var(--ember-glow);
+      border-radius: 2px;
+      transition: left 0.4s cubic-bezier(.34,1.56,.64,1), width 0.4s cubic-bezier(.34,1.56,.64,1);
+      z-index: 1;
+    }
+
+    /* Tab pane fade-slide */
+    [data-pane] {
+      animation: pane-in 0.45s var(--easing);
+    }
+
+    /* Topbar enhancements */
+    #incidentHeader { padding-bottom: 1rem; }
+
+    /* Section hover lift */
+    .section { transition: transform 0.4s var(--easing), border-color 0.4s var(--easing), box-shadow 0.4s var(--easing); }
+    .section:hover { border-color: var(--border-strong); }
+
+    /* Save button success morph */
+    #saveBtn.saved {
+      background: linear-gradient(180deg, #7BE5BA 0%, #2FBF85 100%);
+      color: #052016;
+    }
+    #saveBtn.saved::after { display: none; }
+
+    /* Modal animation */
+    .modal-back { animation: fade-up 0.25s var(--easing); }
+    .modal {
+      animation: modal-pop 0.45s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes modal-pop {
+      0%   { opacity: 0; transform: translateY(20px) scale(0.92); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+  </style>
+
+</body>
+</html>

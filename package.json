@@ -1,0 +1,27 @@
+{
+  "name": "opspilot-ems",
+  "version": "1.0.0",
+  "description": "OpsPilot — Incident Intelligence & RCA platform (EMS workflow)",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "free-port": "node server/scripts/free-port.js",
+    "migrate-json-to-db": "node server/scripts/migrate-json-to-db.js"
+  },
+  "keywords": [
+    "incident-management",
+    "rca",
+    "ems",
+    "operations"
+  ],
+  "author": "OpsPilot",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^8.0.8",
+    "pg": "^8.12.0",
+    "uuid": "^9.0.1"
+  }
+}

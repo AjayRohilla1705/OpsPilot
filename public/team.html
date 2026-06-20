@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OpsPilot · Team</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <script>
+    try { if (localStorage.getItem('sentinel.theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+
+  <style>
+    /* ===== Team page — accent palette for the avatars / workload bars ===== */
+    :root {
+      --acc-ember-from:  #FF8A57;  --acc-ember-to:  #C13E15;
+      --acc-mint-from:   #7BE5BA;  --acc-mint-to:   #1C9E66;
+      --acc-cyan-from:   #5BD0FF;  --acc-cyan-to:   #0A85B8;
+      --acc-violet-from: #B59CFF;  --acc-violet-to: #7253D6;
+      --acc-rose-from:   #FF8AA8;  --acc-rose-to:   #C73655;
+      --acc-amber-from:  #FFCE6B;  --acc-amber-to:  #D17800;
+      --acc-gold-from:   #FFE08A;  --acc-gold-to:   #B58C00;
+      --acc-sky-from:    #7AC7FF;  --acc-sky-to:    #0078D4;
+    }
+
+    /* ===== Header eyebrow (ADMIN VIEW with crown) ===== */
+    .admin-view-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ember);
+      background: var(--ember-glow);
+      border: 1px solid var(--border-glow);
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin-bottom: 0.4rem;
+    }
+    .admin-view-eyebrow i { font-size: 0.85rem; }
+
+    /* ===== Team grid ===== */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.1rem;
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 720px) { .team-grid { grid-template-columns: 1fr; } }
+
+    /* ===== Member card ===== */
+    .member-card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.1rem 1.2rem 1rem;
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: var(--shadow-1);
+      contain: layout style;
+      transition: transform 0.35s var(--easing), border-color 0.35s var(--easing), box-shadow 0.35s var(--easing);
+    }
+    .member-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-strong);
+      box-shadow: 0 30px 60px -28px rgba(0,0,0,0.6), 0 0 0 1px var(--border-strong) inset;
+    }
+
+    .mc-head {
+      display: flex; align-items: flex-start; gap: 0.85rem;
+      margin-bottom: 0.9rem;
+    }
+
+    /* ===== Avatar ===== */
+    .mc-avatar {
+      position: relative;
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1rem;
+      color: #1A0A02;
+      flex-shrink: 0;
+      box-shadow: 0 6px 18px -8px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.18) inset;
+    }
+    .mc-avatar.acc-ember  { background: linear-gradient(135deg, var(--acc-ember-from),  var(--acc-ember-to)); }
+    .mc-avatar.acc-mint   { background: linear-gradient(135deg, var(--acc-mint-from),   var(--acc-mint-to)); }
+    .mc-avatar.acc-cyan   { background: linear-gradient(135deg, var(--acc-cyan-from),   var(--acc-cyan-to)); }
+    .mc-avatar.acc-violet { background: linear-gradient(135deg, var(--acc-violet-from), var(--acc-violet-to)); color: #fff; }
+    .mc-avatar.acc-rose   { background: linear-gradient(135deg, var(--acc-rose-from),   var(--acc-rose-to)); color: #fff; }
+    .mc-avatar.acc-amber  { background: linear-gradient(135deg, var(--acc-amber-from),  var(--acc-amber-to)); }
+    .mc-avatar.acc-gold   { background: linear-gradient(135deg, var(--acc-gold-from),   var(--acc-gold-to)); }
+    .mc-avatar.acc-sky    { background: linear-gradient(135deg, var(--acc-sky-from),    var(--acc-sky-to)); color: #fff; }
+
+    .mc-status-dot {
+      position: absolute;
+      right: -2px; bottom: -2px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--mint);
+      border: 2px solid var(--bg-1);
+      box-shadow: 0 0 0 0 rgba(110,231,183,0.5);
+      animation: status-pulse 2.4s var(--easing) infinite;
+    }
+    @keyframes status-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(110,231,183,0.5); }
+      50%      { box-shadow: 0 0 0 4px rgba(110,231,183,0); }
+    }
+
+    /* ===== Name / role / dept ===== */
+    .mc-id { min-width: 0; flex: 1; }
+    .mc-name { font-size: 1.05rem; font-weight: 600; color: var(--text); letter-spacing: -0.005em; }
+    .mc-role { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .mc-dept {
+      display: inline-block;
+      margin-top: 0.35rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* ===== Contact rows ===== */
+    .mc-contact {
+      display: grid; gap: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .mc-contact .row {
+      display: flex; align-items: center; gap: 0.55rem;
+      min-width: 0;
+    }
+    .mc-contact .row i { color: var(--text-dim); font-size: 0.85rem; flex-shrink: 0; }
+    .mc-contact .row span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mc-contact .row a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px dashed transparent;
+      transition: color 0.2s var(--easing), border-color 0.2s var(--easing);
+    }
+    .mc-contact .row a:hover { color: var(--ember); border-bottom-color: var(--border-glow); }
+
+    /* ===== Workload meter ===== */
+    .mc-workload-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.4rem;
+    }
+    .mc-workload-head .count { color: var(--text); font-size: 0.78rem; font-weight: 600; letter-spacing: 0; }
+    .mc-workload-track {
+      width: 100%; height: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .mc-workload-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      transition: width 1.1s cubic-bezier(.22,1,.36,1);
+      position: relative;
+    }
+    .mc-workload-fill::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 2.6s ease-in-out infinite;
+    }
+    .mc-workload-fill.acc-ember  { background: linear-gradient(90deg, var(--acc-ember-from),  var(--acc-ember-to)); }
+    .mc-workload-fill.acc-mint   { background: linear-gradient(90deg, var(--acc-mint-from),   var(--acc-mint-to)); }
+    .mc-workload-fill.acc-cyan   { background: linear-gradient(90deg, var(--acc-cyan-from),   var(--acc-cyan-to)); }
+    .mc-workload-fill.acc-violet { background: linear-gradient(90deg, var(--acc-violet-from), var(--acc-violet-to)); }
+    .mc-workload-fill.acc-rose   { background: linear-gradient(90deg, var(--acc-rose-from),   var(--acc-rose-to)); }
+    .mc-workload-fill.acc-amber  { background: linear-gradient(90deg, var(--acc-amber-from),  var(--acc-amber-to)); }
+    .mc-workload-fill.acc-gold   { background: linear-gradient(90deg, var(--acc-gold-from),   var(--acc-gold-to)); }
+    .mc-workload-fill.acc-sky    { background: linear-gradient(90deg, var(--acc-sky-from),    var(--acc-sky-to)); }
+
+    /* ===== Metric tiles ===== */
+    .mc-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      margin-top: 0.85rem;
+    }
+    .mc-metric {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.7rem;
+    }
+    .mc-metric .label {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .mc-metric .label i { font-size: 0.75rem; }
+    .mc-metric .value {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.1;
+      margin-top: 0.15rem;
+    }
+
+    /* ===== Search input (in topbar actions) ===== */
+    .team-search {
+      position: relative;
+      min-width: 280px;
+    }
+    .team-search input {
+      width: 100%;
+      padding: 0.65rem 0.9rem 0.65rem 2.4rem;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      outline: none;
+      transition: background 0.2s var(--easing), border-color 0.2s var(--easing), box-shadow 0.2s var(--easing);
+    }
+    .team-search input:focus { border-color: var(--border-glow); background: var(--surface-3); box-shadow: 0 0 0 4px var(--ember-glow); }
+    .team-search svg { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+
+    /* ===== Empty state ===== */
+    .team-empty {
+      grid-column: 1 / -1;
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .team-empty .iconring {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 1px dashed var(--border-strong);
+      display: grid; place-items: center;
+      margin: 0 auto 0.9rem;
+      color: var(--text-dim);
+    }
+
+    /* ===== Skeleton card while loading ===== */
+    .mc-skel { padding: 1.1rem 1.2rem; min-height: 220px; }
+    .mc-skel .skel { background: var(--surface-3); border-radius: 6px; }
+
+    /* Stagger reveal */
+    .member-card {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0);
+      animation: card-rise 0.55s var(--easing) both;
+    }
+    @keyframes card-rise {
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <div id="sidebar-root"></div>
+
+    <main>
+      <header class="topbar sticky" data-reveal>
+        <div class="title-block">
+          <span class="admin-view-eyebrow">
+            <i class="bi bi-shield-fill-check"></i> Admin view
+          </span>
+          <h1 class="serif">Team.</h1>
+          <p class="muted" style="margin-top:0.25rem; font-size:0.92rem;">
+            All members <span class="dim">·</span> workload <span class="dim">·</span> performance
+          </p>
+        </div>
+        <div class="actions">
+          <div class="team-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="teamSearch" type="text" placeholder="Search by name, role, dept…" autocomplete="off" />
+          </div>
+          <button id="addMemberBtn" class="btn btn-primary" type="button" style="display:none;">
+            <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
+            <span>Add member</span>
+          </button>
+        </div>
+      </header>
+
+      <section id="teamGrid" class="team-grid" aria-label="Team members">
+        <!-- Skeletons while loading -->
+        <div class="member-card mc-skel"><div class="skel" style="width:60%; height:18px; margin-bottom:8px;"></div><div class="skel" style="width:40%; height:14px; margin-bottom:14px;"></div><div class="skel" style="width:100%; height:6px; margin-bottom:10px;"></div><div class="skel" style="width:100%; height:48px;"></div></div>
+        <div class="member-card mc-skel"><div class="skel" style="width:60%; height:18px; margin-bottom:8px;"></div><div class="skel" style="width:40%; height:14px; margin-bottom:14px;"></div><div class="skel" style="width:100%; height:6px; margin-bottom:10px;"></div><div class="skel" style="width:100%; height:48px;"></div></div>
+        <div class="member-card mc-skel"><div class="skel" style="width:60%; height:18px; margin-bottom:8px;"></div><div class="skel" style="width:40%; height:14px; margin-bottom:14px;"></div><div class="skel" style="width:100%; height:6px; margin-bottom:10px;"></div><div class="skel" style="width:100%; height:48px;"></div></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Member edit / create modal (admin-only) -->
+  <div class="modal-backdrop" id="memberModalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="memberModalTitle">
+      <header class="modal-head">
+        <h2 class="serif" id="memberModalTitle">New member</h2>
+        <button type="button" class="modal-close" id="memberModalClose" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <form id="memberForm" class="modal-body" novalidate>
+        <input type="hidden" id="mfId" />
+        <div class="field"><label for="mfName">Name *</label><input class="input" id="mfName" maxlength="80" required autocomplete="off" /></div>
+        <div class="form-row">
+          <div class="field"><label for="mfRole">Role *</label><input class="input" id="mfRole" maxlength="80" required autocomplete="off" /></div>
+          <div class="field"><label for="mfDept">Department</label><input class="input" id="mfDept" maxlength="80" autocomplete="off" /></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label for="mfEmail">Email</label><input class="input" id="mfEmail" type="email" maxlength="120" autocomplete="off" /></div>
+          <div class="field"><label for="mfPhone">Phone</label><input class="input" id="mfPhone" maxlength="40" autocomplete="off" /></div>
+        </div>
+        <div class="field">
+          <label>Avatar accent</label>
+          <div class="accent-picker" id="mfAccent">
+            <button type="button" class="accent-swatch acc-ember"  data-value="ember"  title="Ember"></button>
+            <button type="button" class="accent-swatch acc-mint"   data-value="mint"   title="Mint"></button>
+            <button type="button" class="accent-swatch acc-cyan"   data-value="cyan"   title="Cyan"></button>
+            <button type="button" class="accent-swatch acc-violet" data-value="violet" title="Violet"></button>
+            <button type="button" class="accent-swatch acc-rose"   data-value="rose"   title="Rose"></button>
+            <button type="button" class="accent-swatch acc-amber"  data-value="amber"  title="Amber"></button>
+            <button type="button" class="accent-swatch acc-gold"   data-value="gold"   title="Gold"></button>
+            <button type="button" class="accent-swatch acc-sky"    data-value="sky"    title="Sky"></button>
+          </div>
+        </div>
+        <footer class="modal-foot">
+          <button type="button" class="btn btn-danger" id="mfDelete" style="display:none;">
+            <i class="bi bi-trash"></i> Delete
+          </button>
+          <div class="modal-foot-right">
+            <button type="button" class="btn" id="mfCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="mfSave">
+              <i class="bi bi-check2-circle"></i> Save member
+            </button>
+          </div>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/motion.js" defer></script>
+  <script src="/js/team.js"></script>
+</body>
+</html>

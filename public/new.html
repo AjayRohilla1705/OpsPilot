@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OpsPilot · New Incident</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+
+  <script>
+    try { if (localStorage.getItem('sentinel.theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+
+  <style>
+    /* ============================================================
+       Work-item layout — Azure DevOps-style chrome, Sentinel theme
+       ============================================================ */
+    html, body { background: var(--bg-0); color: var(--text); height: 100%; }
+    body { font-family: var(--font-body); overflow-x: hidden; }
+
+    .wi-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ----- Top breadcrumb pill ----- */
+    .wi-crumb-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 1.2rem;
+      background: var(--surface-strong);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .wi-crumb {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(255,122,71,0.10), rgba(255,122,71,0.04));
+      border: 1px solid rgba(255,122,71,0.28);
+      color: var(--ember);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+    }
+    .wi-crumb i { font-size: 0.85rem; }
+    .wi-close-btn {
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s var(--easing), border-color 0.2s var(--easing), background 0.2s var(--easing);
+    }
+    .wi-close-btn:hover { color: var(--rose); border-color: rgba(255,90,95,0.35); background: rgba(255,90,95,0.06); }
+
+    /* ----- Header (ID + title + action buttons) ----- */
+    .wi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1.5rem 0.5rem;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+    }
+    .wi-header-left {
+      display: flex; align-items: center; gap: 0.75rem;
+      min-width: 0; flex: 1;
+    }
+    .wi-id {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      color: var(--text);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .wi-id-dd {
+      width: 24px; height: 24px;
+      display: grid; place-items: center;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: color 0.2s var(--easing);
+    }
+    .wi-id-dd:hover { color: var(--ember); border-color: var(--border-glow); }
+    .wi-prefix {
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      padding-right: 0.25rem;
+    }
+    .wi-title {
+      font-family: var(--font-body);
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.005em;
+      min-width: 0;
+      flex: 1;
+      padding: 0.4rem 0.7rem;
+      border: 1px dashed transparent;
+      border-radius: 8px;
+      outline: none;
+      cursor: text;
+      transition: border-color 0.2s var(--easing), background 0.2s var(--easing);
+    }
+    .wi-title:empty::before {
+      content: attr(data-placeholder);
+      color: var(--text-dim);
+    }
+    .wi-title:hover { border-color: var(--border); background: var(--surface-2); }
+    .wi-title:focus { border-color: var(--ember); background: var(--surface-2); }
+    .wi-title.field-error { border-color: var(--rose); background: rgba(255,90,95,0.06); }
+
+    /* Header action buttons */
+    .wi-header-right {
+      display: flex; align-items: center; gap: 0.4rem;
+      flex-shrink: 0;
+    }
+    .wi-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 0.85rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s var(--easing), border-color 0.2s var(--easing), color 0.2s var(--easing), transform 0.2s var(--easing);
+    }
+    .wi-btn:hover { background: var(--surface-3); border-color: var(--border-glow); }
+    .wi-btn.primary {
+      background: linear-gradient(180deg, #FF8A57, #FF7236);
+      color: #1A0A02;
+      font-weight: 600;
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 8px 22px -10px var(--ember-glow);
+    }
+    .wi-btn.primary:hover { box-shadow: 0 12px 30px -10px var(--ember-glow); transform: translateY(-1px); }
+    .wi-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .wi-btn-icon {
+      width: 32px; height: 32px;
+      display: grid; place-items: center;
+      padding: 0;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.2s var(--easing), border-color 0.2s var(--easing), background 0.2s var(--easing);
+    }
+    .wi-btn-icon:hover { color: var(--ember); border-color: var(--border-glow); background: var(--ember-glow); }
+
+    /* ----- Assignee + comments row ----- */
+    .wi-assignee-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.55rem 1.5rem;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+    }
+    .wi-assignee-left {
+      display: flex; align-items: center; gap: 1.1rem;
+      flex-wrap: wrap;
+    }
+    .wi-assignee {
+      display: inline-flex; align-items: center; gap: 0.55rem;
+    }
+    .wi-avatar {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5BD0FF, #0A85B8);
+      color: #fff;
+      display: grid; place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.7rem;
+    }
+    .wi-assignee-select {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      border-bottom: 1px dashed transparent;
+      transition: border-color 0.2s var(--easing), background 0.2s var(--easing);
+    }
+    .wi-assignee-select:hover { border-bottom-color: var(--border-strong); background: var(--surface-2); }
+    .wi-assignee-select:focus { outline: none; border-bottom-color: var(--ember); background: var(--surface-2); }
+    .wi-meta-link {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      cursor: pointer;
+      transition: color 0.2s var(--easing);
+    }
+    .wi-meta-link:hover { color: var(--ember); }
+
+    /* Tab strip */
+    .wi-tabs {
+      display: inline-flex; align-items: center; gap: 0;
+    }
+    .wi-tab {
+      background: transparent;
+      border: none;
+      padding: 0.5rem 0.95rem;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.86rem;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s var(--easing);
+    }
+    .wi-tab:hover { color: var(--text); }
+    .wi-tab.active { color: var(--text); }
+    .wi-tab.active::after {
+      content: '';
+      position: absolute;
+      left: 0.5rem; right: 0.5rem; bottom: -2px;
+      height: 2px;
+      background: var(--ember);
+      border-radius: 2px;
+      box-shadow: 0 0 10px var(--ember-glow);
+    }
+    .wi-tab-icons { display: inline-flex; gap: 0.25rem; padding-left: 0.5rem; border-left: 1px solid var(--border); margin-left: 0.5rem; }
+    .wi-tab-icon {
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-radius: 6px;
+      position: relative;
+      transition: color 0.2s var(--easing), background 0.2s var(--easing);
+    }
+    .wi-tab-icon:hover { color: var(--text); background: var(--surface-2); }
+    .wi-tab-icon .badge {
+      position: absolute; top: 3px; right: 3px;
+      font-family: var(--font-mono); font-size: 0.55rem;
+      background: var(--ember); color: #1A0A02;
+      padding: 0 4px; border-radius: 6px; font-weight: 700;
+    }
+
+    /* ----- Meta row (state, area, iteration, updated by) ----- */
+    .wi-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 0.6rem 1.5rem;
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+    }
+    .wi-meta-pair { display: inline-flex; align-items: baseline; gap: 0.5rem; }
+    .wi-meta-pair .k {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .wi-meta-pair .v {
+      color: var(--text);
+      font-size: 0.88rem;
+      display: inline-flex; align-items: center; gap: 0.35rem;
+    }
+    .wi-meta-pair .v .state-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px rgba(229,196,107,0.45);
+    }
+    .wi-meta-pair .v i { font-size: 0.85rem; color: var(--text-dim); }
+    .wi-meta-right {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+    }
+
+    /* ----- Body: 3-column ----- */
+    .wi-body {
+      display: grid;
+      grid-template-columns: 1.5fr 1.1fr 1fr;
+      gap: 1.2rem;
+      padding: 1.4rem 1.5rem 3rem;
+      min-height: 0;
+    }
+    @media (max-width: 1280px) { .wi-body { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 880px)  { .wi-body { grid-template-columns: 1fr; } }
+
+    .wi-col { display: flex; flex-direction: column; gap: 1.4rem; min-width: 0; }
+
+    /* ----- Section card (each labeled block) ----- */
+    .wi-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .wi-section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.5rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .wi-section-head h3 {
+      color: var(--ember);
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.92rem;
+      margin: 0;
+      letter-spacing: 0.01em;
+    }
+    .wi-section-head .wi-section-actions { display: inline-flex; gap: 0.25rem; color: var(--text-dim); }
+    .wi-section-head .wi-section-actions button {
+      width: 22px; height: 22px;
+      display: grid; place-items: center;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: color 0.2s var(--easing), background 0.2s var(--easing);
+    }
+    .wi-section-head .wi-section-actions button:hover { color: var(--ember); background: var(--surface-2); }
+    .wi-section h4 {
+      color: var(--text);
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.95rem;
+      margin: 0.5rem 0 0.4rem;
+    }
+    .wi-section .wi-section-sub {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+    }
+    .wi-textarea {
+      width: 100%;
+      min-height: 80px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      padding: 0.65rem 0.8rem;
+      outline: none;
+      resize: vertical;
+      line-height: 1.55;
+      transition: border-color 0.2s var(--easing), background 0.2s var(--easing), box-shadow 0.2s var(--easing);
+    }
+    .wi-textarea::placeholder { color: var(--text-dim); font-style: normal; }
+    .wi-textarea:hover { border-color: var(--border-strong); }
+    .wi-textarea:focus { border-color: var(--ember); background: var(--surface-3); box-shadow: 0 0 0 3px var(--ember-glow); }
+    .wi-textarea.large { min-height: 110px; }
+
+    /* Field row (label above input, used in middle/right columns) */
+    .wi-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .wi-field-label {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .wi-field-label .req { color: var(--rose); margin-left: 0.15rem; }
+    .wi-input,
+    .wi-select {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0.55rem 0.75rem;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s var(--easing), background 0.2s var(--easing), box-shadow 0.2s var(--easing);
+    }
+    .wi-input::placeholder { color: var(--text-dim); }
+    .wi-input:hover, .wi-select:hover { border-color: var(--border-strong); }
+    .wi-input:focus, .wi-select:focus { border-color: var(--ember); background: var(--surface-3); box-shadow: 0 0 0 3px var(--ember-glow); }
+    .wi-input.field-error,
+    .wi-textarea.field-error,
+    .wi-select.field-error { border-color: var(--rose); animation: shake 0.4s var(--easing); }
+    @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+    .wi-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3l3 3 3-3' stroke='%239094A6' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem center;
+      padding-right: 2rem;
+    }
+    :root[data-theme="light"] .wi-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3l3 3 3-3' stroke='%235A5E6F' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    /* Severity chip */
+    .wi-sev-display {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+    }
+    .wi-sev-display.sev-p1 { background: rgba(255,90,95,0.10); color: var(--p1); border: 1px solid rgba(255,90,95,0.30); }
+    .wi-sev-display.sev-p2 { background: rgba(255,157,69,0.10); color: var(--p2); border: 1px solid rgba(255,157,69,0.30); }
+    .wi-sev-display.sev-p3 { background: rgba(229,196,107,0.10); color: var(--p3); border: 1px solid rgba(229,196,107,0.30); }
+    .wi-sev-display.sev-p4 { background: rgba(91,208,255,0.10); color: var(--p4); border: 1px solid rgba(91,208,255,0.30); }
+
+    /* Empty state placeholder text */
+    .wi-empty {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      padding: 0.4rem 0;
+      cursor: text;
+    }
+
+    /* Bridge details collapsible */
+    details.wi-collapse summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+    details.wi-collapse summary::-webkit-details-marker { display: none; }
+    details.wi-collapse summary .twirl {
+      transition: transform 0.2s var(--easing);
+      color: var(--text-dim);
+    }
+    details.wi-collapse[open] summary .twirl { transform: rotate(180deg); }
+    details.wi-collapse[open] { margin-bottom: 0.5rem; }
+
+    /* EMS events placeholder */
+    .wi-add-row {
+      font-family: var(--font-body);
+      font-size: 0.84rem;
+      color: var(--text-dim);
+      padding: 0.45rem 0;
+      cursor: pointer;
+      border: 1px dashed var(--border-strong);
+      border-radius: 7px;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      background: var(--surface-2);
+      width: 100%;
+      transition: color 0.2s var(--easing), border-color 0.2s var(--easing);
+    }
+    .wi-add-row:hover { color: var(--ember); border-color: var(--border-glow); }
+
+    /* Approvals row */
+    .wi-approval {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.45rem 0;
+    }
+    .wi-checkbox {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--text);
+      user-select: none;
+    }
+    .wi-checkbox input { appearance: none; -webkit-appearance: none; display: none; }
+    .wi-checkbox .box {
+      width: 16px; height: 16px;
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      background: var(--surface-2);
+      position: relative;
+      transition: background 0.2s var(--easing), border-color 0.2s var(--easing);
+    }
+    .wi-checkbox input:checked + .box { background: var(--ember); border-color: var(--ember); }
+    .wi-checkbox input:checked + .box::after {
+      content: '';
+      position: absolute; left: 4px; top: 1px;
+      width: 5px; height: 9px;
+      border: solid #1A0A02; border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Related work area */
+    .wi-rel {
+      display: flex; flex-direction: column;
+      gap: 0.5rem;
+    }
+    .wi-rel-action {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.55rem;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: border-color 0.2s var(--easing), background 0.2s var(--easing), color 0.2s var(--easing);
+    }
+    .wi-rel-action:hover { color: var(--ember); border-color: var(--border-glow); background: var(--ember-glow); }
+    .wi-rel-link {
+      color: var(--text-accent);
+      text-decoration: none;
+      font-size: 0.82rem;
+      padding: 0.2rem 0;
+      cursor: pointer;
+    }
+    .wi-rel-link:hover { text-decoration: underline; }
+    .wi-rel-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.6rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+    }
+    .wi-rel-item .meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim); }
+    .wi-rel-item .title { color: var(--text); font-size: 0.86rem; }
+    .wi-rel-item .resolved-dot { color: var(--mint); }
+
+    /* Alert / saved banners */
+    .wi-alert {
+      display: none;
+      align-items: center; justify-content: space-between;
+      gap: 0.65rem;
+      padding: 0.65rem 1.1rem;
+      background: rgba(255,90,95,0.10);
+      border-bottom: 1px solid rgba(255,90,95,0.30);
+      color: var(--rose);
+      font-size: 0.85rem;
+    }
+    .wi-alert.visible { display: flex; }
+    .wi-alert button {
+      background: transparent; border: none; color: var(--rose);
+      cursor: pointer; font-size: 1rem;
+    }
+    .wi-saved {
+      display: none;
+      align-items: center; gap: 0.6rem;
+      padding: 0.6rem 1.1rem;
+      background: rgba(110,231,183,0.10);
+      border-bottom: 1px solid rgba(110,231,183,0.30);
+      color: var(--mint);
+      font-size: 0.88rem;
+    }
+    .wi-saved.visible { display: flex; }
+
+    /* Send notification banner */
+    .wi-notif-banner {
+      display: none;
+      align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255,181,71,0.10);
+      border: 1px dashed rgba(255,181,71,0.35);
+      color: var(--amber);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Hidden teams section (kept for schema compatibility — collapsed
+       by default. Most flows don't need explicit teams at create-time.) */
+    .wi-teams-collapse > summary {
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 0.4rem 0;
+    }
+    .wi-teams-collapse > summary::-webkit-details-marker { display: none; }
+    .team-add-row { display: flex; gap: 0.4rem; margin: 0.4rem 0; }
+    .team-input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 0.4rem 0.6rem;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .team-input:focus { border-color: var(--ember); }
+    .btn-add-member {
+      background: var(--surface-3);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 0.4rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .btn-add-member:hover { background: var(--ember-glow); color: var(--ember); border-color: var(--border-glow); }
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      background: var(--ember-glow);
+      border: 1px solid var(--border-glow);
+      color: var(--ember);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-family: var(--font-body);
+    }
+    .tag-chip .chip-remove { cursor: pointer; font-size: 0.8rem; opacity: 0.75; }
+    .tag-chip .chip-remove:hover { opacity: 1; color: var(--rose); }
+    #incident-team, #rca-team { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .team-err {
+      display: none;
+      color: var(--rose);
+      font-size: 0.78rem;
+      padding-top: 0.2rem;
+    }
+    .team-err.visible { display: block; }
+
+    /* Section note (parenthetical caption in section heads, like
+       "(Others have to always keep it 'False')") */
+    .wi-section-note {
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-left: 0.35rem;
+      letter-spacing: 0;
+    }
+
+    /* Visible team-members chip area with empty-state hint */
+    .team-chips-area {
+      min-height: 28px;
+      padding: 0.25rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .team-chips-area:empty::before {
+      content: attr(data-empty-text);
+      color: var(--text-dim);
+      font-size: 0.84rem;
+      font-family: var(--font-body);
+    }
+
+    /* "False" / "True" pill toggle (right column · Only for EMS/GSM) */
+    .wi-toggle {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      user-select: none;
+      padding: 0.2rem 0;
+    }
+    .wi-toggle input {
+      position: absolute; opacity: 0;
+      width: 0; height: 0;
+    }
+    .wi-toggle .slider {
+      position: relative;
+      width: 38px; height: 22px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      border: 1px solid var(--border-strong);
+      transition: background 0.2s var(--easing), border-color 0.2s var(--easing);
+    }
+    .wi-toggle .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 2px; top: 50%;
+      transform: translateY(-50%);
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: transform 0.2s var(--easing), background 0.2s var(--easing);
+    }
+    .wi-toggle input:checked + .slider {
+      background: linear-gradient(135deg, #FF8A57, var(--ember));
+      border-color: var(--ember);
+    }
+    .wi-toggle input:checked + .slider::before {
+      transform: translate(15px, -50%);
+      background: #fff;
+    }
+    .wi-toggle-label {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+    .wi-toggle input:checked ~ .wi-toggle-label { color: var(--ember); }
+
+    /* Discussion section (full-width, below the 3 columns) */
+    .wi-discussion {
+      padding: 1.2rem 1.5rem 2.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-1);
+    }
+    .wi-discussion .wi-section-head {
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.7rem;
+    }
+    .wi-disc-row {
+      display: flex; gap: 0.7rem;
+      align-items: flex-start;
+    }
+    .wi-disc-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1ABC9C, #16A085);
+      color: #fff;
+      display: grid; place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.72rem;
+      flex-shrink: 0;
+    }
+    .wi-disc-input {
+      flex: 1;
+      min-height: 70px;
+    }
+    .wi-disc-hint {
+      margin-top: 0.45rem;
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      padding-left: 2.7rem;
+    }
+
+    /* ---------------- Mobile / tablet (new incident page) ---------------- */
+    /* The 3-column body already collapses (1280px → 2col, 880px → 1col).
+       These rules fix the header, assignee, meta and discussion rows so the
+       whole page is comfortable to fill out on a phone. */
+    @media (max-width: 760px) {
+      .wi-crumb-bar { padding: 0.5rem 0.9rem; }
+
+      /* Header: id + title + actions stack instead of crushing together. */
+      .wi-header { flex-wrap: wrap; padding: 0.7rem 1rem 0.55rem; gap: 0.55rem; }
+      .wi-header-left { flex-wrap: wrap; gap: 0.4rem 0.5rem; width: 100%; }
+      .wi-prefix { display: none; }
+      .wi-title { flex: 1 1 100%; font-size: 1.12rem; padding: 0.45rem 0.6rem; }
+      .wi-header-right { width: 100%; flex-wrap: wrap; gap: 0.4rem; }
+      .wi-header-right .wi-btn.primary { flex: 1 1 100%; justify-content: center; }
+
+      /* Assignee + tabs row stacks. */
+      .wi-assignee-row { flex-direction: column; align-items: stretch; gap: 0.55rem; padding: 0.6rem 1rem; }
+      .wi-assignee-left { width: 100%; gap: 0.8rem; flex-wrap: wrap; }
+      .wi-tabs { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .wi-tab { white-space: nowrap; }
+
+      /* Meta row: tighter, "updated by" drops to its own line. */
+      .wi-meta-row { gap: 0.5rem 1.1rem; padding: 0.6rem 1rem; }
+      .wi-meta-right { margin-left: 0; width: 100%; }
+
+      /* Body + discussion: edge-to-edge padding on phones. */
+      .wi-body { padding: 1rem 1rem 2.5rem; gap: 1.2rem; }
+      .wi-discussion { padding: 1rem 1rem 2rem; }
+      .wi-disc-hint { padding-left: 0; }
+
+      /* Validation / saved banners wrap nicely. */
+      .wi-alert, .wi-saved { padding: 0.6rem 1rem; }
+    }
+
+    @media (max-width: 420px) {
+      .wi-header-right .wi-btn { flex: 1 1 auto; justify-content: center; }
+      .wi-title { font-size: 1.05rem; }
+      .wi-body { padding: 0.85rem 0.8rem 2.5rem; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wi-shell">
+
+    <!-- 1. Breadcrumb pill -->
+    <div class="wi-crumb-bar">
+      <span class="wi-crumb">
+        <i class="bi bi-fire"></i>
+        <span>RCA <span id="incident-id-label">NEW</span></span>
+      </span>
+      <a href="/dashboard.html" class="wi-close-btn" title="Close — back to dashboard" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </a>
+    </div>
+
+    <!-- 2. Alert bar (validation errors) -->
+    <div class="wi-alert" id="ims-alert" role="alert">
+      <span><i class="bi bi-exclamation-triangle-fill"></i> <span id="ims-alert-msg"></span></span>
+      <button type="button" id="ims-alert-close" aria-label="Dismiss">×</button>
+    </div>
+    <!-- Saved banner -->
+    <div class="wi-saved" id="ims-saved-banner">
+      <i class="bi bi-check-circle-fill"></i>
+      <span id="ims-saved-banner-msg">Saved.</span>
+    </div>
+
+    <!-- 3. Header (ID + title + actions) -->
+    <header class="wi-header">
+      <div class="wi-header-left">
+        <span class="wi-id" id="wi-id-header">—</span>
+        <button type="button" class="wi-id-dd" title="Work item type" aria-label="Work item type">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 3l3 3 3-3"/></svg>
+        </button>
+        <span class="wi-prefix">OpsPilot · EMS</span>
+        <div class="wi-title incident-title-text"
+             contenteditable="true"
+             role="textbox"
+             aria-label="Incident title"
+             data-placeholder="Type the incident title"></div>
+      </div>
+      <div class="wi-header-right">
+        <button type="button" class="wi-btn primary" id="btn-save-close">
+          <i class="bi bi-save-fill"></i> <span id="btn-save-close-label">Save and Close</span>
+        </button>
+        <button type="button" class="wi-btn" id="btn-follow"><i class="bi bi-bell"></i> Follow</button>
+        <button type="button" class="wi-btn-icon" id="btn-refresh" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+        <button type="button" class="wi-btn-icon" id="btn-undo" title="Reset form"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button type="button" class="wi-btn-icon" id="btn-more" title="More — back to dashboard"><i class="bi bi-three-dots-vertical"></i></button>
+      </div>
+    </header>
+
+    <!-- 4. Assignee + comments + tabs -->
+    <div class="wi-assignee-row">
+      <div class="wi-assignee-left">
+        <div class="wi-assignee">
+          <span class="wi-avatar" id="wi-avatar-initials">EM</span>
+          <select class="wi-assignee-select" id="eng-select" aria-label="Assignee">
+            <option value="">— Assignee —</option>
+            <!-- Options are populated dynamically from the team roster (/api/team) in new.js -->
+          </select>
+        </div>
+        <a href="#" class="wi-meta-link" id="meta-link-comments"><i class="bi bi-chat-left-text"></i> <span>0 Comments</span></a>
+        <a href="#" class="wi-meta-link" id="meta-link-add-tag"><i class="bi bi-tag"></i> Add Tag</a>
+      </div>
+      <div class="wi-tabs">
+        <button type="button" class="wi-tab active" id="tab-details">Details</button>
+        <button type="button" class="wi-tab" id="tab-similar">Similar workitems <span id="tab-similar-spinner" style="display:none; margin-left:5px; font-size:10px; color:var(--ember);">Loading…</span></button>
+        <div class="wi-tab-icons">
+          <button type="button" class="wi-tab-icon" title="History"><i class="bi bi-clock-history"></i></button>
+          <button type="button" class="wi-tab-icon" title="Links"><span class="badge">1</span><i class="bi bi-link-45deg"></i></button>
+          <button type="button" class="wi-tab-icon" title="Attachments"><span class="badge">0</span><i class="bi bi-paperclip"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Meta row -->
+    <div class="wi-meta-row">
+      <div class="wi-meta-pair">
+        <span class="k">State</span>
+        <span class="v"><span class="state-dot"></span><span id="meta-state-value">Live</span></span>
+      </div>
+      <div class="wi-meta-pair">
+        <span class="k">Reason</span>
+        <span class="v"><i class="bi bi-lock"></i><span id="meta-reason-value">New incident initiated</span></span>
+      </div>
+      <div class="wi-meta-pair">
+        <span class="k">Area</span>
+        <span class="v" id="meta-area-value">Engineering\Platform</span>
+      </div>
+      <div class="wi-meta-pair">
+        <span class="k">Iteration</span>
+        <span class="v" id="meta-iteration-value">Engineering\2025-Sprints</span>
+      </div>
+      <div class="wi-meta-right">Updated by <span id="meta-updated-by">EMS Operator</span> · <span id="meta-updated-when">just now</span></div>
+    </div>
+
+    <!-- 6. Body — 3 columns (matching reference screenshot order top-to-bottom) -->
+    <main class="wi-body" id="ims-body">
+
+      <!-- ============ LEFT COLUMN ============ -->
+      <div class="wi-col">
+
+        <!-- 1. Affected Services (collapsible) -->
+        <details class="wi-section wi-collapse" open>
+          <summary>
+            <h3>Affected Services <span style="color:var(--rose);">*</span></h3>
+            <span class="twirl"><i class="bi bi-chevron-down"></i></span>
+          </summary>
+          <textarea class="wi-textarea" id="affected-services" placeholder="One affected service per line"></textarea>
+        </details>
+
+        <!-- 2. Incident Description (collapsible) -->
+        <details class="wi-section wi-collapse" open>
+          <summary>
+            <h3>Incident Description <span style="color:var(--rose);">*</span></h3>
+            <span class="twirl"><i class="bi bi-chevron-down"></i></span>
+          </summary>
+          <textarea class="wi-textarea" id="incident-desc" placeholder="One-line summary of what happened, when, and what's affected."></textarea>
+        </details>
+
+        <!-- 3. Bridge Details (required · links only) -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Bridge Details <span style="color:var(--rose);">*</span></h3></div>
+          <textarea class="wi-textarea" id="bridge-details" placeholder="Paste the bridge link(s) only (required · links only, no names or notes)"></textarea>
+          <div class="wi-disc-hint dim" id="bridge-hint" style="padding-left:0;">Required · links only — no names or notes. <span id="bridge-wordcount">0</span> characters.</div>
+        </section>
+
+        <!-- 4. Steps to Resolve Incident -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Steps to Resolve Incident <span style="color:var(--rose);">*</span></h3></div>
+          <textarea class="wi-textarea large" id="steps-resolve" placeholder="One step per line"></textarea>
+        </section>
+
+        <!-- 5. Next Steps -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Next Steps</h3></div>
+          <textarea class="wi-textarea" id="next-steps" placeholder="Click to add Next Steps."></textarea>
+        </section>
+
+        <!-- 6. Root Cause Analysis -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Root Cause Analysis</h3></div>
+          <textarea class="wi-textarea large" id="rca-text" placeholder="Click to add Root Cause Analysis."></textarea>
+        </section>
+
+        <!-- 7. Business Impact -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Business Impact</h3></div>
+          <textarea class="wi-textarea" id="business-impact" placeholder="Click to add Business Impact."></textarea>
+        </section>
+
+        <!-- 8. Learnings from the Incident (Technical / Procedural / Organizational) -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Learnings from the Incident (Technical / Procedural / Organizational)</h3></div>
+          <textarea class="wi-textarea" id="learnings" placeholder="Click to add Learnings from the Incident (Technical / Procedural / Organizational)."></textarea>
+        </section>
+
+        <!-- 9. Corrective Action Plan -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Corrective Action Plan</h3></div>
+          <textarea class="wi-textarea" id="corrective-action-plan" placeholder="Click to add Corrective Action Plan."></textarea>
+        </section>
+
+        <!-- 10. Outage Timeline (For EMS Only) -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Outage Timeline (For EMS Only)</h3></div>
+          <textarea class="wi-textarea" id="outage-timeline" placeholder="Click to add Outage Timeline (For EMS Only)."></textarea>
+        </section>
+      </div>
+
+      <!-- ============ MIDDLE COLUMN ============ -->
+      <div class="wi-col">
+
+        <!-- 1. Incident Team Members -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Incident Team Members</h3></div>
+          <div class="team-add-row" data-target="incident-team">
+            <input type="text" class="team-input" id="incident-team-input" placeholder="Add a member by name and press Enter" />
+            <button type="button" class="btn-add-member" data-target="incident-team" data-input="incident-team-input">Add</button>
+          </div>
+          <div id="incident-team" class="team-chips-area" data-empty-text="Click to add Incident Team Members."></div>
+          <div class="team-err" id="incident-team-err"></div>
+        </section>
+
+        <!-- 2. RCA Team Members -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>RCA Team Members</h3></div>
+          <div class="team-add-row" data-target="rca-team">
+            <input type="text" class="team-input" id="rca-team-input" placeholder="Add a member by name and press Enter" />
+            <button type="button" class="btn-add-member" data-target="rca-team" data-input="rca-team-input">Add</button>
+          </div>
+          <div id="rca-team" class="team-chips-area" data-empty-text="Click to add RCA Team Members."></div>
+          <div class="team-err" id="rca-team-err"></div>
+        </section>
+
+        <!-- 3. To Be Filled by EMS / Incident Manager -->
+        <section class="wi-section">
+          <div class="wi-section-head">
+            <h3>To Be Filled by EMS / Incident Manager</h3>
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="inc-initiation">Incident Initiation</label>
+            <input class="wi-input" id="inc-initiation" placeholder="How the incident was initiated" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="monitoring-events">EMS Monitoring Detected Events</label>
+            <input class="wi-input" id="monitoring-events" placeholder="Monitoring tools that detected the event" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="root-cause">Originating Root Cause</label>
+            <input class="wi-input" id="root-cause" placeholder="Short, blameless cause statement" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="change-id">Change ID / Release ID</label>
+            <input class="wi-input" id="change-id" placeholder="Change or release identifier" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="detected-time">Incident Detected Time</label>
+            <input class="wi-input" id="detected-time" type="datetime-local" data-dtp />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="duration">Duration of Root Cause</label>
+            <input class="wi-input" id="duration" placeholder="Duration of root cause" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="revenue-impact">Fareportal Revenue Impact</label>
+            <input class="wi-input" id="revenue-impact" placeholder="$ value or 'indirect'" />
+          </div>
+        </section>
+
+        <!-- 4. EMS Events -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>EMS Events</h3></div>
+          <div class="wi-empty">Click to add EMS Events.</div>
+        </section>
+
+        <!-- 5. Approvals -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Approvals</h3></div>
+          <div class="wi-approval">
+            <label class="wi-checkbox">
+              <input type="checkbox" id="cio-approval" />
+              <span class="box"></span>
+              CIO Approval
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ RIGHT COLUMN ============ -->
+      <div class="wi-col">
+
+        <!-- 1. Only for EMS/GSM — Send Notifications toggle -->
+        <section class="wi-section">
+          <div class="wi-section-head">
+            <h3>Only for EMS / GSM <span class="wi-section-note">(Others have to always keep it 'False')</span></h3>
+          </div>
+          <div class="wi-field">
+            <label class="wi-field-label" for="send-notification">Send Notifications</label>
+            <label class="wi-toggle">
+              <input type="checkbox" id="send-notification" />
+              <span class="slider"></span>
+              <span class="wi-toggle-label" id="send-notification-label">False</span>
+            </label>
+          </div>
+          <div class="wi-notif-banner" id="notif-banner">
+            <i class="bi bi-bell-fill"></i> A notification will be dispatched to ops when this incident is saved.
+          </div>
+        </section>
+
+        <!-- 2. Incident Details -->
+        <section class="wi-section">
+          <div class="wi-section-head"><h3>Incident Details</h3></div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="outage-type">Outage Type <span class="req">*</span></label>
+            <select class="wi-select" id="outage-type">
+              <option value="">— Select outage type —</option>
+              <option>IT EVENT</option>
+              <option>OUTAGE</option>
+              <option>DEGRADATION</option>
+            </select>
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="sev-select">Incident Severity</label>
+            <select class="wi-select" id="sev-select" aria-label="Severity">
+              <option value="">— Select severity —</option>
+              <option value="P1">P1</option>
+              <option value="P2">P2</option>
+              <option value="P2-Low">P2-Low</option>
+              <option value="P3" selected>P3</option>
+            </select>
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="start-time">Incident Start time <span class="req">*</span></label>
+            <input class="wi-input" id="start-time" type="datetime-local" data-dtp />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="end-time">Incident End time</label>
+            <input class="wi-input" id="end-time" type="datetime-local" data-dtp />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="revenue-impact-details">Revenue Impact</label>
+            <input class="wi-input" id="revenue-impact-details" placeholder="—" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="func-impacted">Function Impacted</label>
+            <input class="wi-input" id="func-impacted" placeholder="—" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="location">Location Impacted</label>
+            <input class="wi-input" id="location" placeholder="No selection made" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="tech-area">Tech Area Impacted</label>
+            <input class="wi-input" id="tech-area" placeholder="—" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="quick-remarks">Quick Remarks</label>
+            <input class="wi-input" id="quick-remarks" placeholder="—" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="quick-remarks-2">Quick Remarks 2</label>
+            <input class="wi-input" id="quick-remarks-2" placeholder="—" />
+          </div>
+
+          <div class="wi-field">
+            <label class="wi-field-label" for="rca-completed-date">RCA Completed Date</label>
+            <input class="wi-input" id="rca-completed-date" type="date" placeholder="Select a date..." />
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+
+    <!-- 7. Discussion (full-width, below all three columns) -->
+    <section class="wi-discussion">
+      <div class="wi-section-head"><h3>Discussion</h3></div>
+      <div class="wi-disc-row">
+        <div class="wi-disc-avatar" id="wi-disc-avatar">EM</div>
+        <textarea class="wi-textarea wi-disc-input" id="discussion-comment"
+          placeholder="Add a comment. Use # to link a work item, @ to mention a person, or ! to link a pull request."></textarea>
+      </div>
+      <div class="wi-disc-hint dim">Comments will be posted after the incident is saved.</div>
+    </section>
+
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/motion.js" defer></script>
+  <script src="/js/datetimepicker.js"></script>
+  <script src="/js/new.js"></script>
+</body>
+</html>

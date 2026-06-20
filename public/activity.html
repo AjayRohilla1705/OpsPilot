@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OpsPilot · Activity Log</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <script>
+    try { if (localStorage.getItem('sentinel.theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+
+  <style>
+    /* ===== Admin-view eyebrow (shared aesthetic with Team page) ===== */
+    .admin-view-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ember);
+      background: var(--ember-glow);
+      border: 1px solid var(--border-glow);
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin-bottom: 0.4rem;
+    }
+    .admin-view-eyebrow i { font-size: 0.85rem; }
+
+    /* ===== Filters row (search + dropdown) ===== */
+    .act-filters {
+      display: flex;
+      gap: 0.75rem;
+      align-items: stretch;
+      margin: 1.25rem 0 1rem;
+    }
+    .act-search {
+      flex: 1;
+      position: relative;
+      min-width: 0;
+    }
+    .act-search input {
+      width: 100%;
+      padding: 0.7rem 0.9rem 0.7rem 2.6rem;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: background 0.2s var(--easing), border-color 0.2s var(--easing), box-shadow 0.2s var(--easing);
+    }
+    .act-search input:focus {
+      border-color: var(--border-glow);
+      background: var(--surface-3);
+      box-shadow: 0 0 0 4px var(--ember-glow);
+    }
+    .act-search svg { position: absolute; left: 0.95rem; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+
+    .act-filter-icon {
+      width: 44px;
+      display: grid; place-items: center;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    .act-filter-select {
+      min-width: 160px;
+      padding: 0.7rem 2.2rem 0.7rem 0.9rem;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239094A6' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      outline: none;
+      transition: background 0.2s var(--easing), border-color 0.2s var(--easing), box-shadow 0.2s var(--easing);
+    }
+    .act-filter-select:focus {
+      border-color: var(--border-glow);
+      background-color: var(--surface-3);
+      box-shadow: 0 0 0 4px var(--ember-glow);
+    }
+    :root[data-theme="light"] .act-filter-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%235A5E6F' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    /* ===== Audit trail card ===== */
+    .audit-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: var(--shadow-1);
+      overflow: hidden;
+      contain: layout style;
+    }
+    .audit-head {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.95rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .audit-head .icon {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--ember-glow);
+      color: var(--ember);
+      display: grid; place-items: center;
+      border: 1px solid var(--border-glow);
+    }
+    .audit-head .title {
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.005em;
+    }
+
+    /* ===== Table ===== */
+    .audit-table-wrap { overflow-x: auto; }
+    table.audit-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.86rem;
+    }
+    table.audit-table th {
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 500;
+      padding: 0.85rem 1.2rem;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    table.audit-table td {
+      padding: 0.95rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    table.audit-table tbody tr {
+      transition: background 0.15s var(--easing);
+    }
+    table.audit-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(255,122,71,0.04), var(--surface-2));
+    }
+    table.audit-table tbody tr:last-child td { border-bottom: 0; }
+
+    /* Column-specific styles */
+    .col-ts .ts-primary { font-weight: 500; color: var(--text); }
+    .col-ts .ts-relative { color: var(--text-dim); font-size: 0.78rem; font-family: var(--font-mono); margin-top: 0.15rem; }
+    .col-user { color: var(--text); font-weight: 500; }
+    .col-incident a {
+      color: var(--ember);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      letter-spacing: 0;
+      border-bottom: 1px dashed transparent;
+      transition: color 0.2s var(--easing), border-color 0.2s var(--easing);
+    }
+    .col-incident a:hover { color: var(--ember); border-bottom-color: var(--border-glow); }
+    .col-incident .id-none { color: var(--text-dim); font-family: var(--font-mono); font-size: 0.84rem; }
+    .col-details { color: var(--text-muted); max-width: 540px; }
+
+    /* ===== Action badges ===== */
+    .act-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      border: 1px solid;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .act-badge i { font-size: 0.78rem; }
+    .act-badge.created   { color: var(--ember);  background: rgba(255,122,71,0.12);  border-color: rgba(255,122,71,0.32); }
+    .act-badge.updated   { color: var(--amber);  background: rgba(255,181,71,0.12);  border-color: rgba(255,181,71,0.32); }
+    .act-badge.deleted   { color: #FF6B8B;       background: rgba(255,107,139,0.12); border-color: rgba(255,107,139,0.32); }
+    .act-badge.assigned  { color: var(--violet); background: rgba(181,156,255,0.12); border-color: rgba(181,156,255,0.32); }
+    .act-badge.resolved  { color: var(--mint);   background: rgba(110,231,183,0.12); border-color: rgba(110,231,183,0.32); }
+    .act-badge.commented { color: var(--cyan);   background: rgba(91,208,255,0.12);  border-color: rgba(91,208,255,0.32); }
+
+    /* ===== Empty state ===== */
+    .audit-empty {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .audit-empty .iconring {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 1px dashed var(--border-strong);
+      display: grid; place-items: center;
+      margin: 0 auto 0.9rem;
+      color: var(--text-dim);
+    }
+
+    /* ===== Loading skeleton ===== */
+    .audit-skel-row td { padding: 0.95rem 1.2rem; }
+    .audit-skel-bar {
+      display: block;
+      height: 12px;
+      width: 100%;
+      background: var(--surface-3);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .audit-skel-bar::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 1.4s linear infinite;
+    }
+
+    /* ===== Row reveal ===== */
+    table.audit-table tbody tr {
+      opacity: 0;
+      transform: translate3d(0, 4px, 0);
+    }
+    table.audit-table tbody tr.row-in {
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.35s ease-out, transform 0.35s var(--easing);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <div id="sidebar-root"></div>
+
+    <main>
+      <header class="topbar sticky" data-reveal>
+        <div class="title-block">
+          <span class="admin-view-eyebrow">
+            <i class="bi bi-shield-fill-check"></i> Admin view
+          </span>
+          <h1 class="serif">Activity Log.</h1>
+          <p class="muted" style="margin-top:0.25rem; font-size:0.92rem;">
+            System-wide audit trail <span class="dim">·</span> <span id="actCountLabel">—</span> events
+          </p>
+        </div>
+      </header>
+
+      <!-- Filters row -->
+      <div class="act-filters">
+        <div class="act-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="actSearch" type="text" placeholder="Search by user, incident ID, details…" autocomplete="off" />
+        </div>
+        <div class="act-filter-icon" title="Filter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        </div>
+        <select id="actActionFilter" class="act-filter-select" title="Filter by action">
+          <option value="">All actions</option>
+          <option value="CREATED">CREATED</option>
+          <option value="UPDATED">UPDATED</option>
+          <option value="DELETED">DELETED</option>
+          <option value="ASSIGNED">ASSIGNED</option>
+          <option value="RESOLVED">RESOLVED</option>
+          <option value="COMMENTED">COMMENTED</option>
+        </select>
+      </div>
+
+      <!-- Audit trail card -->
+      <div class="audit-card">
+        <div class="audit-head">
+          <div class="icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="title">Audit Trail</div>
+        </div>
+
+        <div class="audit-table-wrap">
+          <table class="audit-table" aria-label="Audit trail">
+            <thead>
+              <tr>
+                <th style="width: 200px;">Timestamp</th>
+                <th style="width: 200px;">User</th>
+                <th style="width: 160px;">Action</th>
+                <th style="width: 140px;">Incident</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="actBody">
+              <!-- Initial skeleton rows -->
+              <tr class="audit-skel-row"><td colspan="5"><span class="audit-skel-bar"></span></td></tr>
+              <tr class="audit-skel-row"><td colspan="5"><span class="audit-skel-bar" style="width:90%"></span></td></tr>
+              <tr class="audit-skel-row"><td colspan="5"><span class="audit-skel-bar" style="width:82%"></span></td></tr>
+              <tr class="audit-skel-row"><td colspan="5"><span class="audit-skel-bar" style="width:88%"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/motion.js" defer></script>
+  <script src="/js/activity.js"></script>
+</body>
+</html>

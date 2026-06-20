@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OpsPilot · Reports</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <script>
+    try { if (localStorage.getItem('sentinel.theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="app">
+    <div id="sidebar-root"></div>
+
+    <main>
+      <header class="topbar sticky" data-reveal>
+        <div class="title-block">
+          <span class="admin-view-eyebrow"><i class="bi bi-bar-chart-fill"></i> Reports</span>
+          <h1 class="serif">Reports.</h1>
+          <p class="muted" style="margin-top:0.25rem; font-size:0.92rem;">
+            Operational health <span class="dim">·</span> trends <span class="dim">·</span> distribution
+          </p>
+        </div>
+        <div class="actions">
+          <button class="btn" id="exportJsonBtn" type="button">
+            <i class="bi bi-download" aria-hidden="true"></i> Export JSON
+          </button>
+          <button class="btn btn-primary" id="exportCsvBtn" type="button">
+            <i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> Export CSV
+          </button>
+        </div>
+      </header>
+
+      <!-- KPI strip -->
+      <section class="rep-kpis" id="repKpis" aria-label="Headline metrics">
+        <div class="rep-kpi"><div class="rep-kpi-label">Total tracked</div><div class="rep-kpi-value" id="kTotal">—</div></div>
+        <div class="rep-kpi"><div class="rep-kpi-label">Open</div><div class="rep-kpi-value" id="kOpen">—</div></div>
+        <div class="rep-kpi"><div class="rep-kpi-label">Resolved</div><div class="rep-kpi-value" id="kClosed">—</div></div>
+        <div class="rep-kpi"><div class="rep-kpi-label">Mean time to resolve</div><div class="rep-kpi-value" id="kMttr">—</div></div>
+      </section>
+
+      <!-- Two-column body -->
+      <section class="rep-grid">
+        <article class="card rep-card" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-ember"><i class="bi bi-pie-chart-fill"></i></span>
+            <div>
+              <h2 class="set-title">By severity</h2>
+              <p class="set-sub">Distribution across P1–P4</p>
+            </div>
+          </header>
+          <div id="sevBars" class="sev-bar-list"></div>
+        </article>
+
+        <article class="card rep-card" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-mint"><i class="bi bi-diagram-3-fill"></i></span>
+            <div>
+              <h2 class="set-title">By state</h2>
+              <p class="set-sub">Current lifecycle breakdown</p>
+            </div>
+          </header>
+          <div id="stateBars" class="sev-bar-list"></div>
+        </article>
+
+        <article class="card rep-card" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-violet"><i class="bi bi-graph-up"></i></span>
+            <div>
+              <h2 class="set-title">Last 6 months</h2>
+              <p class="set-sub">Incidents created per month</p>
+            </div>
+          </header>
+          <div id="monthly" class="rep-monthly"></div>
+        </article>
+
+        <article class="card rep-card" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-cyan"><i class="bi bi-people-fill"></i></span>
+            <div>
+              <h2 class="set-title">Top owners</h2>
+              <p class="set-sub">By incidents handled</p>
+            </div>
+          </header>
+          <div id="owners" class="rep-owners"></div>
+        </article>
+
+        <article class="card rep-card rep-card-wide" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-amber"><i class="bi bi-clock-history"></i></span>
+            <div>
+              <h2 class="set-title">Recent activity</h2>
+              <p class="set-sub">Last 10 updates</p>
+            </div>
+          </header>
+          <div class="table-wrap">
+            <table class="rep-table">
+              <thead>
+                <tr><th>ID</th><th>Title</th><th>Severity</th><th>State</th><th>Owner</th><th>Updated</th></tr>
+              </thead>
+              <tbody id="recentBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <p class="set-meta" id="repMeta"></p>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/motion.js" defer></script>
+  <script src="/js/reports.js"></script>
+</body>
+</html>

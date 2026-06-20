@@ -1,0 +1,11 @@
+node_modules/
+server/data/incidents.json
+server/data/activity.json
+server/data/team.json
+server/data/settings.json
+server/data/uploads/*
+!server/data/uploads/.gitkeep
+*.log
+.DS_Store
+.env
+.env.local

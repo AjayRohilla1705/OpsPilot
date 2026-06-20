@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OpsPilot · Settings</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <script>
+    try { if (localStorage.getItem('sentinel.theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+</head>
+<body>
+
+  <div class="app">
+    <div id="sidebar-root"></div>
+
+    <main>
+      <header class="topbar sticky" data-reveal>
+        <div class="title-block">
+          <span class="admin-view-eyebrow">
+            <i class="bi bi-shield-fill-check"></i> Admin view
+          </span>
+          <h1 class="serif">Settings.</h1>
+          <p class="muted" style="margin-top:0.25rem; font-size:0.92rem;">
+            Personal preferences <span class="dim">·</span> system configuration
+          </p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="saveBtn" type="button" disabled>
+            <i class="bi bi-check2-circle" aria-hidden="true"></i>
+            Save changes
+          </button>
+        </div>
+      </header>
+
+      <section class="set-grid" aria-label="Settings sections">
+
+        <!-- ===== Profile (read-only) ===== -->
+        <article class="card set-card" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-mint"><i class="bi bi-shield-fill-check"></i></span>
+            <div>
+              <h2 class="set-title">Profile</h2>
+              <p class="set-sub">Read-only</p>
+            </div>
+          </header>
+          <div class="set-body">
+            <div class="set-kv">
+              <div class="set-kv-label">Display name</div>
+              <div class="set-kv-value" id="profDisplayName">—</div>
+            </div>
+            <div class="set-kv">
+              <div class="set-kv-label">Role</div>
+              <div class="set-kv-value">
+                <span class="role-badge"><i class="bi bi-shield-fill-check"></i> <span id="profRole">Administrator</span></span>
+              </div>
+            </div>
+            <div class="set-kv">
+              <div class="set-kv-label">Organization</div>
+              <div class="set-kv-value" id="profOrg">—</div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== Appearance ===== -->
+        <article class="card set-card" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-violet"><i class="bi bi-stars"></i></span>
+            <div>
+              <h2 class="set-title">Appearance</h2>
+              <p class="set-sub">Theme preferences</p>
+            </div>
+          </header>
+          <div class="set-body set-row-flex">
+            <div>
+              <div class="set-row-title">Theme</div>
+              <div class="set-row-sub">
+                Currently: <span id="themeCurrent" class="text-accent">Dark</span>
+              </div>
+            </div>
+            <button id="themeSwitchBtn" type="button" class="btn">
+              <i class="bi bi-sun-fill" aria-hidden="true"></i>
+              <span id="themeSwitchLabel">Switch to Light</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ===== Notifications ===== -->
+        <article class="card set-card" data-reveal>
+          <header class="set-head">
+            <span class="set-icon acc-amber"><i class="bi bi-bell-fill"></i></span>
+            <div>
+              <h2 class="set-title">Notifications</h2>
+              <p class="set-sub">Choose how you're alerted</p>
+            </div>
+          </header>
+          <div class="set-body">
+            <label class="set-row">
+              <div class="set-row-text">
+                <div class="set-row-title">Email digest</div>
+                <div class="set-row-sub">Daily summary at 09:00</div>
+              </div>
+              <span class="toggle">
+                <input type="checkbox" id="ntfEmail" />
+                <span class="slider" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <label class="set-row">
+              <div class="set-row-text">
+                <div class="set-row-title">Browser push</div>
+                <div class="set-row-sub">Real-time pings for criticals</div>
+              </div>
+              <span class="toggle">
+                <input type="checkbox" id="ntfPush" />
+                <span class="slider" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <label class="set-row">
+              <div class="set-row-text">
+                <div class="set-row-title">Slack mentions</div>
+                <div class="set-row-sub">Tagged in #incidents</div>
+              </div>
+              <span class="toggle">
+                <input type="checkbox" id="ntfSlack" />
+                <span class="slider" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <label class="set-row">
+              <div class="set-row-text">
+                <div class="set-row-title">
+                  Incident emails
+                  <span class="nav-badge inline-badge" style="background:linear-gradient(135deg,#7BE5BA,#1C9E66);border-color:rgba(28,158,102,0.45);">LIVE</span>
+                </div>
+                <div class="set-row-sub">Full RCA-style email on incident create &amp; state change</div>
+              </div>
+              <span class="toggle">
+                <input type="checkbox" id="ntfIncidentEmails" />
+                <span class="slider" aria-hidden="true"></span>
+              </span>
+            </label>
+          </div>
+        </article>
+
+        <!-- ===== SLA Configuration ===== -->
+        <article class="card set-card set-admin-only" data-reveal data-admin-section="sla">
+          <header class="set-head">
+            <span class="set-icon acc-mint"><i class="bi bi-stopwatch-fill"></i></span>
+            <div>
+              <h2 class="set-title">SLA Configuration <span class="nav-badge inline-badge">ADMIN</span></h2>
+              <p class="set-sub">Per-priority hours</p>
+            </div>
+          </header>
+          <div class="set-body">
+            <div class="sla-grid">
+              <div class="field">
+                <label for="slaP1">Critical</label>
+                <div class="input-with-suffix">
+                  <input class="input" type="number" id="slaP1" min="0" max="9999" inputmode="numeric" />
+                  <span class="suffix">hrs</span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="slaP2">High</label>
+                <div class="input-with-suffix">
+                  <input class="input" type="number" id="slaP2" min="0" max="9999" inputmode="numeric" />
+                  <span class="suffix">hrs</span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="slaP3">Medium</label>
+                <div class="input-with-suffix">
+                  <input class="input" type="number" id="slaP3" min="0" max="9999" inputmode="numeric" />
+                  <span class="suffix">hrs</span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="slaP4">Low</label>
+                <div class="input-with-suffix">
+                  <input class="input" type="number" id="slaP4" min="0" max="9999" inputmode="numeric" />
+                  <span class="suffix">hrs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== Categories ===== -->
+        <article class="card set-card set-admin-only" data-reveal data-admin-section="categories">
+          <header class="set-head">
+            <span class="set-icon acc-ember"><i class="bi bi-tags-fill"></i></span>
+            <div>
+              <h2 class="set-title">Categories <span class="nav-badge inline-badge">ADMIN</span></h2>
+              <p class="set-sub">Add or remove incident categories</p>
+            </div>
+          </header>
+          <div class="set-body">
+            <div class="cat-wrap" id="catWrap" role="list" aria-label="Incident categories"></div>
+            <p class="set-foot">Categories are used to classify incidents in lists, reports, and dashboards.</p>
+          </div>
+        </article>
+
+        <!-- ===== Email Delivery (admin-only) ===== -->
+        <article class="card set-card set-admin-only set-wide" data-reveal data-admin-section="email">
+          <header class="set-head">
+            <span class="set-icon acc-violet"><i class="bi bi-envelope-paper-fill"></i></span>
+            <div>
+              <h2 class="set-title">Email Delivery <span class="nav-badge inline-badge">ADMIN</span></h2>
+              <p class="set-sub">SMTP credentials &amp; recipient list for incident notifications</p>
+            </div>
+          </header>
+          <div class="set-body">
+            <label class="set-row">
+              <div class="set-row-text">
+                <div class="set-row-title">Email delivery enabled</div>
+                <div class="set-row-sub">Master switch — must be on for any email to send</div>
+              </div>
+              <span class="toggle">
+                <input type="checkbox" id="emailEnabled" />
+                <span class="slider" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <div class="email-grid">
+              <div class="field"><label for="smtpHost">SMTP host</label><input class="input" id="smtpHost" maxlength="200" autocomplete="off" /></div>
+              <div class="field"><label for="smtpPort">Port</label><input class="input" id="smtpPort" type="number" min="1" max="65535" inputmode="numeric" /></div>
+            </div>
+
+            <label class="set-row" style="border-bottom:none;padding:0.25rem 0;">
+              <div class="set-row-text">
+                <div class="set-row-title">SSL/TLS (secure)</div>
+                <div class="set-row-sub">On for port 465 · Off for 587 (STARTTLS)</div>
+              </div>
+              <span class="toggle">
+                <input type="checkbox" id="smtpSecure" />
+                <span class="slider" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <div class="email-grid">
+              <div class="field"><label for="smtpUser">SMTP username</label><input class="input" id="smtpUser" maxlength="200" autocomplete="off" /></div>
+              <div class="field">
+                <label for="smtpPass">SMTP password / app password</label>
+                <input class="input" id="smtpPass" type="password" maxlength="500" autocomplete="new-password" placeholder="••••••••••••••••" />
+                <div class="hint" id="smtpPassHint">Gmail requires a 16-character App Password (not your account password).</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="emailFrom">From address</label>
+              <input class="input" id="emailFrom" maxlength="200" autocomplete="off" placeholder="Display name and sender address" />
+              <div class="hint">Defaults to the SMTP username if left blank.</div>
+            </div>
+
+            <div class="field">
+              <label>Recipients</label>
+              <div class="rcpt-wrap" id="rcptWrap" role="list" aria-label="Email recipients"></div>
+              <div class="hint">Press Enter or comma to add. Up to 50 addresses.</div>
+            </div>
+
+            <div class="email-grid">
+              <label class="set-row" style="border:none;padding:0.25rem 0;">
+                <div class="set-row-text"><div class="set-row-title">On create</div></div>
+                <span class="toggle"><input type="checkbox" id="trigOnCreate" /><span class="slider"></span></span>
+              </label>
+              <label class="set-row" style="border:none;padding:0.25rem 0;">
+                <div class="set-row-text"><div class="set-row-title">On state change</div></div>
+                <span class="toggle"><input type="checkbox" id="trigOnState" /><span class="slider"></span></span>
+              </label>
+              <label class="set-row" style="border:none;padding:0.25rem 0;">
+                <div class="set-row-text"><div class="set-row-title">On resolved</div></div>
+                <span class="toggle"><input type="checkbox" id="trigOnResolved" /><span class="slider"></span></span>
+              </label>
+            </div>
+
+            <div class="row gap-2" style="justify-content:space-between;align-items:center;margin-top:0.4rem;">
+              <div id="emailStatus" class="email-status dim mono" style="font-size:0.74rem;"></div>
+              <button type="button" class="btn" id="testEmailBtn">
+                <i class="bi bi-send-fill" aria-hidden="true"></i> Send test email
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== System Preferences ===== -->
+        <article class="card set-card set-admin-only" data-reveal data-admin-section="system">
+          <header class="set-head">
+            <span class="set-icon acc-cyan"><i class="bi bi-sliders"></i></span>
+            <div>
+              <h2 class="set-title">System Preferences <span class="nav-badge inline-badge">ADMIN</span></h2>
+              <p class="set-sub">Org-wide</p>
+            </div>
+          </header>
+          <div class="set-body">
+            <div class="field">
+              <label for="orgName">Organization name</label>
+              <input class="input" type="text" id="orgName" maxlength="120" autocomplete="off" />
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+      <p class="set-meta" id="setMeta" aria-live="polite"></p>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/motion.js" defer></script>
+  <script src="/js/settings.js"></script>
+</body>
+</html>
