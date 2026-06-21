@@ -1,8 +1,11 @@
 const { Resend } = require('resend');
-const { readSettings } = require('./storage');
-const { logger } = require('./logger');
+
+console.log("RESEND_API_KEY =", process.env.RESEND_API_KEY);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const { readSettings } = require('./storage');
+const { logger } = require('./logger');
 
 async function notifyIncident(incident, eventKind) {
 
