@@ -655,7 +655,17 @@ ${incident.incidentDescription }
       html,
     });
 
-    logger.info("[mailer] Resend success", response);
+   logger.info("[mailer] Resend success", response);
+
+// Send Teams notification
+await sendTeamsNotification(
+  incident,
+  subject
+);
+
+logger.info(
+  "[mailer] Teams notification attempted"
+);
 
     return {
       ok: true,
