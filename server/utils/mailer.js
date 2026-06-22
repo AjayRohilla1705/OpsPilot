@@ -7,6 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const { readSettings } = require('./storage');
 const { logger } = require('./logger');
 
+
 async function notifyIncident(incident, eventKind) {
 
   logger.info(
@@ -17,39 +18,62 @@ async function notifyIncident(incident, eventKind) {
 
     const s = await readSettings();
 
+    console.log("FULL SETTINGS =", JSON.stringify(s, null, 2));
+
     const email = s.email || {};
 
+    console.log("EMAIL =", email);
+    console.log("RECIPIENTS =", email.recipients);
+
     if (!email.enabled) {
-      return { ok:false, skipped:'disabled' };
+
+      return {
+
+        ok: false,
+
+        skipped: 'disabled'
+
+      };
+
     }
 
     if (!email.recipients || !email.recipients.length) {
-      return { ok:false, skipped:'no-recipients' };
+
+      return {
+
+        ok: false,
+
+        skipped: 'no-recipients'
+
+      };
+
     }
+
+    const triggers = email.triggers || {};
 
     const allowed =
 
       (eventKind === 'created' &&
-       email.triggers.onCreate !== false)
+       triggers.onCreate !== false)
 
       ||
 
       (eventKind === 'stateChanged' &&
-       email.triggers.onStateChange !== false)
+       triggers.onStateChange !== false)
 
       ||
 
       (eventKind === 'resolved' &&
-       email.triggers.onResolved !== false);
+       triggers.onResolved !== false);
 
 
     if (!allowed) {
 
       return {
 
-        ok:false,
+        ok: false,
 
-        skipped:'trigger-off'
+        skipped: 'trigger-off'
 
       };
 
@@ -92,18 +116,17 @@ async function notifyIncident(incident, eventKind) {
     });
 
 
+    console.log("RESEND RESPONSE =", response);
+
     logger.info(
-
       '[mailer] Resend success',
-
       response
-
     );
 
 
     return {
 
-      ok:true,
+      ok: true,
 
       response
 
@@ -114,17 +137,15 @@ async function notifyIncident(incident, eventKind) {
   catch(err) {
 
     logger.error(
-
       '[mailer ERROR]',
-
       err
-
     );
 
+    console.log("MAIL ERROR =", err);
 
     return {
 
-      ok:false,
+      ok: false,
 
       error: err.message
 
@@ -140,7 +161,16 @@ async function sendTestEmail(toOverride) {
 
   const s = await readSettings();
 
+  console.log(
+    "FULL SETTINGS IN TEST =",
+    JSON.stringify(s, null, 2)
+  );
+
   const email = s.email || {};
+
+  console.log("EMAIL =", email);
+
+  console.log("RECIPIENTS =", email.recipients);
 
   const to =
 
@@ -149,15 +179,25 @@ async function sendTestEmail(toOverride) {
     email.recipients;
 
 
+  console.log("TO =", to);
+
+
+  if (!to || (Array.isArray(to) && to.length === 0)) {
+
+    throw new Error("No recipients configured");
+
+  }
+
+
   const response = await resend.emails.send({
 
     from: email.from,
 
     to,
 
-    subject:'OpsPilot Test Email',
+    subject: 'OpsPilot Test Email',
 
-    html:`
+    html: `
 
       <h2>OpsPilot Email Test</h2>
 
@@ -174,9 +214,15 @@ async function sendTestEmail(toOverride) {
   });
 
 
+  console.log(
+    "TEST EMAIL RESPONSE =",
+    response
+  );
+
+
   return {
 
-    ok:true,
+    ok: true,
 
     response
 
