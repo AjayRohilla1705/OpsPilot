@@ -716,3 +716,8 @@ async function sendTestEmail(toOverride) {
   };
 
 }
+
+module.exports = {
+  notifyIncident,
+  sendTestEmail,
+};
