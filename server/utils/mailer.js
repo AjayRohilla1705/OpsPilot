@@ -435,25 +435,22 @@ IST
 
 <li>
 
-${incident.incidentDescription || "Issue identified and investigation ongoing."}
+${incident.incidentDescription }
 
 </li>
 
 <li>
 
-Bridge opened and stakeholders invited.
 
 </li>
 
 <li>
 
-Investigation is ongoing and further updates will be shared shortly.
 
 </li>
 
 <li>
 
-Severity may be upgraded or downgraded based on impact analysis.
 
 </li>
 
