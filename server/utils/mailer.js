@@ -1,9 +1,188 @@
 const { Resend } = require("resend");
+const axios = require("axios");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const { readSettings } = require("./storage");
 const { logger } = require("./logger");
+
+async function sendTeamsNotification(incident, subject) {
+
+  try {
+
+    const webhook = process.env.TEAMS_WEBHOOK_URL;
+
+    if (!webhook) {
+
+      console.log("No Teams webhook found");
+
+      return;
+
+    }
+
+    await axios.post(
+
+      webhook,
+
+      {
+
+        type: "message",
+
+        attachments: [
+
+          {
+
+            contentType:
+
+              "application/vnd.microsoft.card.adaptive",
+
+            content: {
+
+              "$schema":
+
+                "http://adaptivecards.io/schemas/adaptive-card.json",
+
+              type: "AdaptiveCard",
+
+              version: "1.5",
+
+              body: [
+
+                {
+
+                  type: "TextBlock",
+
+                  text: subject,
+
+                  weight: "Bolder",
+
+                  size: "Large",
+
+                  wrap: true,
+
+                  color: "Attention"
+
+                },
+
+                {
+
+                  type: "FactSet",
+
+                  facts: [
+
+                    {
+
+                      title:
+
+                        "Affected Service",
+
+                      value:
+
+                        incident.title
+
+                    },
+
+                    {
+
+                      title:
+
+                        "ADO Workitem",
+
+                      value:
+
+                        incident.id
+
+                    },
+
+                    {
+
+                      title:
+
+                        "Severity",
+
+                      value:
+
+                        incident.severity
+
+                    },
+
+                    {
+
+                      title:
+
+                        "Status",
+
+                      value:
+
+                        incident.state
+
+                    },
+
+                    {
+
+                      title:
+
+                        "Incident Manager",
+
+                      value:
+
+                        incident.assignee ||
+
+                        "EMS Operator"
+
+                    },
+
+                    {
+
+                      title:
+
+                        "Description",
+
+                      value:
+
+                        incident.incidentDescription ||
+
+                        "-"
+
+                    }
+
+                  ]
+
+                }
+
+              ]
+
+            }
+
+          }
+
+        ]
+
+      }
+
+    );
+
+    console.log(
+
+      "Teams notification sent successfully"
+
+    );
+
+  }
+
+  catch(err) {
+
+    console.log(
+
+      "Teams notification failed",
+
+      err.message
+
+    );
+
+  }
+
+}
 
 async function notifyIncident(incident, eventKind) {
   logger.info(
@@ -499,16 +678,23 @@ async function sendTestEmail(toOverride) {
 
   const to = toOverride || email.recipients;
 
-  const response = await resend.emails.send({
-    from: email.from,
-    to,
-    subject: "OpsPilot Test Email",
-    html: `
-      <h2>OpsPilot Email Test</h2>
-      <p>Congratulations 🎉 Resend integration is working.</p>
-    `,
-  });
+ const response = await resend.emails.send({
+  from: email.from,
+  to: email.recipients,
+  subject,
+  html,
+});
 
+await sendTeamsNotification(
+  incident,
+  subject
+);
+
+logger.info(
+  "[mailer] Resend success",
+  response
+);
+ 
   return {
     ok: true,
     response,
