@@ -1,183 +1,501 @@
-const { Resend } = require('resend');
+const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const { readSettings } = require('./storage');
-const { logger } = require('./logger');
+const { readSettings } = require("./storage");
+const { logger } = require("./logger");
 
 async function notifyIncident(incident, eventKind) {
-
   logger.info(
     `[mailer] notifyIncident -> ${eventKind} ${incident.id}`
   );
 
   try {
-
     const s = await readSettings();
 
     const email = s.email || {};
 
     if (!email.enabled) {
-      return { ok: false, skipped: 'disabled' };
+      return { ok: false, skipped: "disabled" };
     }
 
     if (!email.recipients || !email.recipients.length) {
-      return { ok: false, skipped: 'no-recipients' };
+      return { ok: false, skipped: "no-recipients" };
     }
-
-    const triggers = email.triggers || {};
 
     const allowed =
-      (eventKind === 'created' && triggers.onCreate !== false) ||
-      (eventKind === 'stateChanged' && triggers.onStateChange !== false) ||
-      (eventKind === 'resolved' && triggers.onResolved !== false);
+      (eventKind === "created" &&
+        email.triggers.onCreate !== false) ||
+
+      (eventKind === "stateChanged" &&
+        email.triggers.onStateChange !== false) ||
+
+      (eventKind === "resolved" &&
+        email.triggers.onResolved !== false);
 
     if (!allowed) {
-      return { ok: false, skipped: 'trigger-off' };
+      return {
+        ok: false,
+        skipped: "trigger-off",
+      };
     }
 
+    // SUBJECT LINE
     const subject =
-      `OUTAGE | ${incident.severity || '-'} | ${incident.state || '-'} | ${incident.id || '-'} - ${incident.title || '-'}`;
+      `OUTAGE | ${incident.severity} | ${incident.state} | ${incident.id} - ${incident.title}`;
 
+    // HTML TEMPLATE
     const html = `
-      <div style="font-family:Arial,sans-serif;max-width:900px;margin:auto;">
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
 
-        <table width="100%" cellpadding="10" cellspacing="0"
-          style="border-collapse:collapse;border:1px solid #ccc;">
+<body style="
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+padding:20px;
+">
 
-          <tr>
-            <td colspan="2"
-              style="
-                background:#3f6ec4;
-                color:white;
-                font-size:24px;
-                font-weight:bold;
-              ">
-              IT Ops Major Outage Update
-            </td>
-          </tr>
+<div style="
+max-width:900px;
+margin:auto;
+background:#ffffff;
+border:1px solid #dcdcdc;
+">
 
-          <tr>
-            <td style="font-weight:bold;border:1px solid #ccc;">
-              Severity
-            </td>
+<!-- HEADER -->
 
-            <td style="border:1px solid #ccc;">
-              ${incident.severity || '-'}
-            </td>
-          </tr>
+<table width="100%"
+style="
+border-collapse:collapse;
+">
 
-          <tr>
-            <td style="font-weight:bold;border:1px solid #ccc;">
-              Incident ID
-            </td>
+<tr>
 
-            <td style="border:1px solid #ccc;">
-              ${incident.id || '-'}
-            </td>
-          </tr>
+<td
+colspan="4"
 
-          <tr>
-            <td style="font-weight:bold;border:1px solid #ccc;">
-              Affected Service
-            </td>
+style="
+background:#3f6ec4;
+color:white;
+font-size:28px;
+font-weight:bold;
+padding:18px;
+">
 
-            <td style="border:1px solid #ccc;">
-              ${incident.title || '-'}
-            </td>
-          </tr>
+IT Ops Major Outage Update
 
-          <tr>
-            <td style="font-weight:bold;border:1px solid #ccc;">
-              Status
-            </td>
+</td>
 
-            <td style="border:1px solid #ccc;">
-              ${incident.state || '-'}
-            </td>
-          </tr>
+</tr>
 
-          <tr>
-            <td style="font-weight:bold;border:1px solid #ccc;">
-              Description
-            </td>
+<tr>
 
-            <td style="border:1px solid #ccc;">
-              ${incident.incidentDescription || '-'}
-            </td>
-          </tr>
+<td colspan="4"
 
-          <tr>
-            <td style="font-weight:bold;border:1px solid #ccc;">
-              Incident Manager
-            </td>
+style="
+padding:15px;
+font-size:14px;
+">
 
-            <td style="border:1px solid #ccc;">
-              ${incident.assignee || 'Ajay Rohilla'}
-            </td>
-          </tr>
+<div>
+▣ ${incident.severity} - Notification
+</div>
 
-          <tr>
-            <td style="font-weight:bold;border:1px solid #ccc;">
-              Created At
-            </td>
+<br>
 
-            <td style="border:1px solid #ccc;">
-              ${incident.createdAt || '-'}
-            </td>
-          </tr>
+<div style="color:red;">
+❗ High importance
+</div>
 
-        </table>
+</td>
 
-      </div>
-    `;
+</tr>
+
+</table>
+
+<!-- MAIN TABLE -->
+
+<table
+
+width="100%"
+
+style="
+border-collapse:collapse;
+font-size:16px;
+">
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+width:35%;
+">
+
+Affected Service(s):
+
+</td>
+
+<td colspan="3"
+
+style="
+border:1px solid #444;
+padding:12px;
+">
+
+${incident.title}
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+ADO Workitem:
+
+</td>
+
+<td colspan="3"
+
+style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+${incident.id}
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+Incident Start Date
+<br>
+& Time (EST):
+
+</td>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+">
+
+${incident.createdAt || "-"}
+
+</td>
+
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+Incident End Date
+<br>
+& Time (EST):
+
+</td>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+">
+
+${incident.resolvedAt || "-"}
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+Total Outage Duration:
+
+</td>
+
+<td colspan="3"
+
+style="
+border:1px solid #444;
+padding:12px;
+text-align:center;
+">
+
+${incident.duration || "00:00:00"}
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+Incident Description:
+
+</td>
+
+<td colspan="3"
+
+style="
+border:1px solid #444;
+padding:12px;
+">
+
+${incident.incidentDescription || "-"}
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+Current Incident Manager:
+
+</td>
+
+<td colspan="3"
+
+style="
+border:1px solid #444;
+padding:12px;
+">
+
+${incident.assignee || "EMS Operator"}
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+">
+
+Bridge Details:
+
+</td>
+
+<td colspan="3"
+
+style="
+border:1px solid #444;
+padding:12px;
+">
+
+${
+  incident.bridgeLink
+
+    ? `<a href="${incident.bridgeLink}">
+        Join the meeting
+       </a>`
+
+    : "Join the meeting"
+}
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- STATUS -->
+
+<table
+
+width="100%"
+
+style="
+margin-top:15px;
+border-collapse:collapse;
+">
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+width:35%;
+">
+
+Current Status:
+
+</td>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+text-align:center;
+font-weight:bold;
+">
+
+${incident.state}
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- PROGRESS -->
+
+<table
+
+width="100%"
+
+style="
+margin-top:15px;
+border-collapse:collapse;
+">
+
+<tr>
+
+<td style="
+border:1px solid #444;
+padding:12px;
+font-weight:bold;
+width:35%;
+vertical-align:top;
+">
+
+Steps taken/Progress
+<br>
+since last update:
+
+</td>
+
+
+<td
+
+style="
+border:1px solid #444;
+padding:12px;
+line-height:1.8;
+">
+
+<b>Following steps have been taken:</b>
+
+<br><br>
+
+<b>
+${new Date().toLocaleTimeString()}
+EST /
+${new Date().toLocaleTimeString("en-IN")}
+IST
+</b>
+
+<ul>
+
+<li>
+
+${incident.incidentDescription || "Issue identified and investigation ongoing."}
+
+</li>
+
+<li>
+
+Bridge opened and stakeholders invited.
+
+</li>
+
+<li>
+
+Investigation is ongoing and further updates will be shared shortly.
+
+</li>
+
+<li>
+
+Severity may be upgraded or downgraded based on impact analysis.
+
+</li>
+
+</ul>
+
+</td>
+
+</tr>
+
+</table>
+
+</div>
+
+</body>
+
+</html>
+`;
 
     const response = await resend.emails.send({
-
       from: email.from,
-
       to: email.recipients,
-
       subject,
-
-      html
-
+      html,
     });
 
-    logger.info(
-      '[mailer] Resend success',
-      response
-    );
+    logger.info("[mailer] Resend success", response);
 
     return {
-
       ok: true,
-
-      response
-
+      response,
     };
-
   } catch (err) {
-
-    logger.error(
-      '[mailer ERROR]',
-      err
-    );
+    logger.error("[mailer ERROR]", err);
 
     return {
-
       ok: false,
-
-      error: err.message
-
+      error: err.message,
     };
-
   }
-
 }
 
 async function sendTestEmail(toOverride) {
-
   const s = await readSettings();
 
   const email = s.email || {};
@@ -185,47 +503,22 @@ async function sendTestEmail(toOverride) {
   const to = toOverride || email.recipients;
 
   const response = await resend.emails.send({
-
     from: email.from,
-
     to,
-
-    subject: 'OpsPilot Test Email',
-
+    subject: "OpsPilot Test Email",
     html: `
       <h2>OpsPilot Email Test</h2>
-
-      <p>
-        Congratulations 🎉
-      </p>
-
-      <p>
-        Resend integration is working successfully.
-      </p>
-    `
-
+      <p>Congratulations 🎉 Resend integration is working.</p>
+    `,
   });
 
-  logger.info(
-    'TEST EMAIL RESPONSE =',
-    response
-  );
-
   return {
-
     ok: true,
-
-    response
-
+    response,
   };
-
 }
 
 module.exports = {
-
   notifyIncident,
-
-  sendTestEmail
-
+  sendTestEmail,
 };
-
