@@ -672,36 +672,37 @@ ${incident.incidentDescription }
 }
 
 async function sendTestEmail(toOverride) {
+
   const s = await readSettings();
 
   const email = s.email || {};
 
   const to = toOverride || email.recipients;
 
- const response = await resend.emails.send({
-  from: email.from,
-  to: email.recipients,
-  subject,
-  html,
-});
+  const response = await resend.emails.send({
 
-await sendTeamsNotification(
-  incident,
-  subject
-);
+    from: email.from,
 
-logger.info(
-  "[mailer] Resend success",
-  response
-);
- 
+    to,
+
+    subject: "OpsPilot Test Email",
+
+    html: `
+      <h2>OpsPilot Email Test</h2>
+
+      <p>
+      Congratulations 🎉 Resend integration is working.
+      </p>
+    `
+
+  });
+
   return {
-    ok: true,
-    response,
-  };
-}
 
-module.exports = {
-  notifyIncident,
-  sendTestEmail,
-};
+    ok: true,
+
+    response
+
+  };
+
+}
