@@ -1,12 +1,10 @@
+```javascript
 const { Resend } = require('resend');
-
-console.log("RESEND_API_KEY =", process.env.RESEND_API_KEY);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const { readSettings } = require('./storage');
 const { logger } = require('./logger');
-
 
 async function notifyIncident(incident, eventKind) {
 
@@ -18,62 +16,39 @@ async function notifyIncident(incident, eventKind) {
 
     const s = await readSettings();
 
-    console.log("FULL SETTINGS =", JSON.stringify(s, null, 2));
-
     const email = s.email || {};
 
-    console.log("EMAIL =", email);
-    console.log("RECIPIENTS =", email.recipients);
-
     if (!email.enabled) {
-
-      return {
-
-        ok: false,
-
-        skipped: 'disabled'
-
-      };
-
+      return { ok:false, skipped:'disabled' };
     }
 
     if (!email.recipients || !email.recipients.length) {
-
-      return {
-
-        ok: false,
-
-        skipped: 'no-recipients'
-
-      };
-
+      return { ok:false, skipped:'no-recipients' };
     }
-
-    const triggers = email.triggers || {};
 
     const allowed =
 
       (eventKind === 'created' &&
-       triggers.onCreate !== false)
+       email.triggers.onCreate !== false)
 
       ||
 
       (eventKind === 'stateChanged' &&
-       triggers.onStateChange !== false)
+       email.triggers.onStateChange !== false)
 
       ||
 
       (eventKind === 'resolved' &&
-       triggers.onResolved !== false);
+       email.triggers.onResolved !== false);
 
 
     if (!allowed) {
 
       return {
 
-        ok: false,
+        ok:false,
 
-        skipped: 'trigger-off'
+        skipped:'trigger-off'
 
       };
 
@@ -81,24 +56,269 @@ async function notifyIncident(incident, eventKind) {
 
 
     const subject =
-      `[Incident] ${incident.id} - ${incident.title}`;
+      `OUTAGE | ${incident.severity} | ${incident.state} | ${incident.id} - ${incident.title}`;
 
 
     const html = `
 
-      <h2>Incident Notification</h2>
+    <div style="font-family:Arial,sans-serif;width:900px;margin:auto;">
 
-      <p><b>ID:</b> ${incident.id}</p>
+      <table width="100%"
+             cellspacing="0"
+             cellpadding="12"
+             style="border-collapse:collapse;border:1px solid #ccc;">
 
-      <p><b>Title:</b> ${incident.title}</p>
+        <tr>
 
-      <p><b>Severity:</b> ${incident.severity}</p>
+          <td colspan="4"
+              style="
+              background:#3f6ec4;
+              color:white;
+              font-size:22px;
+              font-weight:bold;">
 
-      <p><b>Status:</b> ${incident.state}</p>
+            IT Ops Major Outage Update
 
-      <p><b>Description:</b></p>
+          </td>
 
-      <p>${incident.incidentDescription || '-'}</p>
+        </tr>
+
+        <tr>
+
+          <td colspan="4">
+
+            ▣ ${incident.severity} - Notification
+
+            <br><br>
+
+            ❗ High Importance
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Affected Service(s):
+
+          </td>
+
+          <td colspan="3"
+              style="border:1px solid #ccc;">
+
+            ${incident.title}
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            ADO Workitem:
+
+          </td>
+
+          <td colspan="3"
+              style="border:1px solid #ccc;font-weight:bold;">
+
+            ${incident.id}
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Incident Start Date & Time
+
+          </td>
+
+          <td style="border:1px solid #ccc;">
+
+            ${incident.createdAt || '-'}
+
+          </td>
+
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Incident End Date & Time
+
+          </td>
+
+          <td style="border:1px solid #ccc;">
+
+            ${incident.resolvedAt || '-'}
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Total Outage Duration:
+
+          </td>
+
+          <td colspan="3"
+              style="
+              border:1px solid #ccc;
+              text-align:center;">
+
+            ${incident.duration || '-'}
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Incident Description:
+
+          </td>
+
+          <td colspan="3"
+              style="border:1px solid #ccc;">
+
+            ${incident.incidentDescription || '-'}
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Current Incident Manager:
+
+          </td>
+
+          <td colspan="3"
+              style="border:1px solid #ccc;">
+
+            ${incident.assignee || 'Ajay Rohilla'}
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Bridge Details:
+
+          </td>
+
+          <td colspan="3"
+              style="border:1px solid #ccc;">
+
+            ${
+              incident.bridgeLink
+              ? `<a href="${incident.bridgeLink}">
+                    Join the meeting
+                 </a>`
+              : '-'
+            }
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="font-weight:bold;border:1px solid #ccc;">
+
+            Current Status:
+
+          </td>
+
+          <td colspan="3"
+              style="
+              border:1px solid #ccc;
+              text-align:center;
+              font-weight:bold;">
+
+            ${incident.state}
+
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td style="
+              font-weight:bold;
+              border:1px solid #ccc;
+              vertical-align:top;">
+
+            Steps taken/Progress since last update:
+
+          </td>
+
+
+          <td colspan="3"
+              style="
+              border:1px solid #ccc;
+              line-height:1.8;">
+
+            ${
+              incident.rca ||
+
+              `
+
+              <b>Following steps have been taken:</b>
+
+              <ul>
+
+                <li>
+                  EMS received alerts indicating the issue.
+                </li>
+
+                <li>
+                  Incident bridge opened and stakeholders invited.
+                </li>
+
+                <li>
+                  Investigation is ongoing.
+                </li>
+
+                <li>
+                  Further updates will be shared shortly.
+                </li>
+
+              </ul>
+
+              `
+            }
+
+          </td>
+
+        </tr>
+
+      </table>
+
+    </div>
 
     `;
 
@@ -116,17 +336,18 @@ async function notifyIncident(incident, eventKind) {
     });
 
 
-    console.log("RESEND RESPONSE =", response);
-
     logger.info(
+
       '[mailer] Resend success',
+
       response
+
     );
 
 
     return {
 
-      ok: true,
+      ok:true,
 
       response
 
@@ -137,15 +358,17 @@ async function notifyIncident(incident, eventKind) {
   catch(err) {
 
     logger.error(
+
       '[mailer ERROR]',
+
       err
+
     );
 
-    console.log("MAIL ERROR =", err);
 
     return {
 
-      ok: false,
+      ok:false,
 
       error: err.message
 
@@ -161,16 +384,7 @@ async function sendTestEmail(toOverride) {
 
   const s = await readSettings();
 
-  console.log(
-    "FULL SETTINGS IN TEST =",
-    JSON.stringify(s, null, 2)
-  );
-
   const email = s.email || {};
-
-  console.log("EMAIL =", email);
-
-  console.log("RECIPIENTS =", email.recipients);
 
   const to =
 
@@ -179,25 +393,15 @@ async function sendTestEmail(toOverride) {
     email.recipients;
 
 
-  console.log("TO =", to);
-
-
-  if (!to || (Array.isArray(to) && to.length === 0)) {
-
-    throw new Error("No recipients configured");
-
-  }
-
-
   const response = await resend.emails.send({
 
     from: email.from,
 
     to,
 
-    subject: 'OpsPilot Test Email',
+    subject:'OpsPilot Test Email',
 
-    html: `
+    html:`
 
       <h2>OpsPilot Email Test</h2>
 
@@ -214,15 +418,9 @@ async function sendTestEmail(toOverride) {
   });
 
 
-  console.log(
-    "TEST EMAIL RESPONSE =",
-    response
-  );
-
-
   return {
 
-    ok: true,
+    ok:true,
 
     response
 
@@ -238,3 +436,4 @@ module.exports = {
   sendTestEmail
 
 };
+```
