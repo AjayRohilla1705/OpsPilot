@@ -181,34 +181,26 @@ router.put('/:id', async (req, res, next) => {
         by: merged.updatedBy,
       });
     }
-   await appendActivity({
-  kind: prevState !== merged.state
-    ? 'state-changed'
-    : 'updated',
+    await appendActivity({
+      kind: prevState !== merged.state ? 'state-changed' : 'updated',
+      incidentId: merged.id,
+      title: merged.title,
+      from: prevState,
+      to: merged.state,
+      ts: merged.updatedAt,
+      by: merged.updatedBy
+    });
+   res.json({ ok: true, item: merged });
 
-  incidentId: merged.id,
-  title: merged.title,
-  from: prevState,
-  to: merged.state,
-  ts: merged.updatedAt,
-  by: merged.updatedBy
-});
+console.log("=== INCIDENT UPDATED ===");
+console.log("Owner:", merged.owner);
+console.log("Assignee:", merged.assignee);
+console.log("Steps:", merged.stepsToResolve);
+console.log("Description:", merged.incidentDescription);
 
-res.json({
-  ok: true,
-  item: merged
-});
-
-// Send mail and Teams notification on every update
-notifyIncident(
-  merged,
-  'stateChanged'
-);
-
-}
-catch (e) {
-  next(e);
-}
+// Send mail on EVERY update
+notifyIncident(merged, "updated");
+  } catch (e) { next(e); }
 });
 
 // ---- DELETE ----

@@ -480,7 +480,7 @@ border:1px solid #444;
 padding:12px;
 ">
 
-${incident.assignee || "EMS Operator"}
+${incident.owner || "EMS Operator"}
 
 </td>
 
@@ -618,20 +618,7 @@ ${incident.incidentDescription }
 
 </li>
 
-<li>
 
-
-</li>
-
-<li>
-
-
-</li>
-
-<li>
-
-
-</li>
 
 </ul>
 
