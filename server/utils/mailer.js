@@ -708,12 +708,10 @@ async function sendTestEmail(toOverride) {
   });
 
   return {
-
-    ok: true,
-
-    response
-
-  };
+   ok: true,
+   to,
+   response
+};
 
 }
 
