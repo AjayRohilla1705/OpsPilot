@@ -33,10 +33,12 @@
   }
   /** Display string for the chip: "29-05-2026" */
   function fmtDisplay(parts) {
-    if (!parts) return '';
-    return `${pad(parts.d)}-${pad(parts.m + 1)}-${parts.y}`;
-  }
 
+  if (!parts) return '';
+
+  return `${pad(parts.d)}-${pad(parts.m + 1)}-${parts.y} ${pad(parts.h)}:${pad(parts.mn)}`;
+
+}
   function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
   function firstWeekday(y, m) { return new Date(y, m, 1).getDay(); }
 
@@ -167,10 +169,67 @@
           </div>
         </div>
 
-        <footer class="dtp-foot">
-          <button type="button" class="dtp-text-btn dtp-clear">Clear</button>
-          <button type="button" class="dtp-text-btn dtp-today">Today</button>
-        </footer>
+    <footer class="dtp-foot">
+
+  <div style="
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:12px;
+  ">
+
+    <span style="font-size:12px;color:#999">HH</span>
+
+    <input
+      type="number"
+      class="dtp-hour"
+      min="0"
+      max="23"
+      value="${draft ? draft.h : 0}"
+      style="
+        width:60px;
+        padding:8px;
+        text-align:center;
+        border-radius:8px;
+        border:1px solid #444;
+        background:#111;
+        color:white;
+      "
+    >
+
+    <span>:</span>
+
+    <span style="font-size:12px;color:#999">MM</span>
+
+    <input
+      type="number"
+      class="dtp-minute"
+      min="0"
+      max="59"
+      value="${draft ? draft.mn : 0}"
+      style="
+        width:60px;
+        padding:8px;
+        text-align:center;
+        border-radius:8px;
+        border:1px solid #444;
+        background:#111;
+        color:white;
+      "
+    >
+
+  </div>
+
+  <button type="button" class="dtp-text-btn dtp-clear">
+    Clear
+  </button>
+
+  <button type="button" class="dtp-text-btn dtp-today">
+    Today
+  </button>
+
+</footer>
       `;
 
       bindPop();
@@ -204,6 +263,38 @@
         setValue({ y: n.y, m: n.m, d: n.d, h: 0, mn: 0 });
         renderPop();
       });
+      const hourInput = pop.querySelector('.dtp-hour');
+const minuteInput = pop.querySelector('.dtp-minute');
+
+if (hourInput) {
+
+  hourInput.addEventListener('change', () => {
+
+    const cur = draft || currentDateLocal();
+
+    setValue({
+      ...cur,
+      h: parseInt(hourInput.value || 0)
+    });
+
+  });
+
+}
+
+if (minuteInput) {
+
+  minuteInput.addEventListener('change', () => {
+
+    const cur = draft || currentDateLocal();
+
+    setValue({
+      ...cur,
+      mn: parseInt(minuteInput.value || 0)
+    });
+
+  });
+
+}
     }
 
     function open() {
