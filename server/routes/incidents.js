@@ -181,25 +181,34 @@ router.put('/:id', async (req, res, next) => {
         by: merged.updatedBy,
       });
     }
-    await appendActivity({
-      kind: prevState !== merged.state ? 'state-changed' : 'updated',
-      incidentId: merged.id,
-      title: merged.title,
-      from: prevState,
-      to: merged.state,
-      ts: merged.updatedAt,
-      by: merged.updatedBy
-    });
-    res.json({ ok: true, item: merged });
-    // Email only on actual state transitions (skip noisy field-only edits).
-    // Use the "resolved" event when the new state is a closed one — gives
-    // the email subject a more useful prefix and lets the user gate it
-    // separately via email.triggers.onResolved.
-    if (prevState !== merged.state) {
-      const kind = CLOSED_STATES.has(merged.state) ? 'resolved' : 'stateChanged';
-      notifyIncident(merged, kind);
-    }
-  } catch (e) { next(e); }
+   await appendActivity({
+  kind: prevState !== merged.state
+    ? 'state-changed'
+    : 'updated',
+
+  incidentId: merged.id,
+  title: merged.title,
+  from: prevState,
+  to: merged.state,
+  ts: merged.updatedAt,
+  by: merged.updatedBy
+});
+
+res.json({
+  ok: true,
+  item: merged
+});
+
+// Send mail and Teams notification on every update
+notifyIncident(
+  merged,
+  'stateChanged'
+);
+
+}
+catch (e) {
+  next(e);
+}
 });
 
 // ---- DELETE ----
