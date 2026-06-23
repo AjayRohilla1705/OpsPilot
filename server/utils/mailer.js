@@ -202,22 +202,22 @@ async function notifyIncident(incident, eventKind) {
       return { ok: false, skipped: "no-recipients" };
     }
 
-    const allowed =
-      (eventKind === "created" &&
-        email.triggers.onCreate !== false) ||
+   const allowed = true;
+      //(eventKind === "created" &&
+      //  email.triggers.onCreate !== false) ||
 
-      (eventKind === "stateChanged" &&
-        email.triggers.onStateChange !== false) ||
+     // (eventKind === "stateChanged" &&
+     //   email.triggers.onStateChange !== false) ||
 
-      (eventKind === "resolved" &&
-        email.triggers.onResolved !== false);
+     // (eventKind === "resolved" &&
+       // email.triggers.onResolved !== false);
 
-    if (!allowed) {
-      return {
-        ok: false,
-        skipped: "trigger-off",
-      };
-    }
+  //  if (!allowed) {
+     // return {
+      //  ok: false,
+       // skipped: "trigger-off",
+     // };
+   // }
 
     // SUBJECT LINE
     const subject =
@@ -610,17 +610,16 @@ ${new Date().toLocaleTimeString("en-IN")}
 IST
 </b>
 
+
 <ul>
-
-<li>
-
-${incident.incidentDescription }
-
-</li>
-
-
-
+${
+  (incident.stepsToResolve || [])
+    .map(step => `<li>${step}</li>`)
+    .join("")
+}
 </ul>
+
+
 
 </td>
 
