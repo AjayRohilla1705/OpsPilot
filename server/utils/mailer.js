@@ -396,6 +396,8 @@ ${incident.id}
 border:1px solid #444;
 padding:12px;
 font-weight:bold;
+width:22%;
+vertical-align:top;
 ">
 
 Incident Start Date
@@ -414,8 +416,14 @@ ${
 incident.incidentDetails?.incidentStart
 ? new Date(
 incident.incidentDetails.incidentStart
-).toLocaleString("en-US", {
-timeZone: "America/New_York"
+).toLocaleString("en-IN", {
+timeZone: "Asia/Kolkata",
+day: "2-digit",
+month: "2-digit",
+year: "numeric",
+hour: "2-digit",
+minute: "2-digit",
+hour12: true
 })
 : "-"
 }
@@ -428,6 +436,8 @@ timeZone: "America/New_York"
 border:1px solid #444;
 padding:12px;
 font-weight:bold;
+width:22%;
+vertical-align:top;
 ">
 
 Incident End Date
@@ -443,11 +453,17 @@ padding:12px;
 
 <td>
 ${
-incident.incidentDetails?.incidentEnd
+incident.incidentDetails?.incidentStart
 ? new Date(
-incident.incidentDetails.incidentEnd
-).toLocaleString("en-US", {
-timeZone: "America/New_York"
+incident.incidentDetails.incidentStart
+).toLocaleString("en-IN", {
+timeZone: "Asia/Kolkata",
+day: "2-digit",
+month: "2-digit",
+year: "numeric",
+hour: "2-digit",
+minute: "2-digit",
+hour12: true
 })
 : "-"
 }
