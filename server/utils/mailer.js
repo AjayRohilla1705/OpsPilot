@@ -409,9 +409,8 @@ Incident Start Date
 <td style="
 border:1px solid #444;
 padding:12px;
+width:25%;
 ">
-
-<td>
 ${
 incident.incidentDetails?.incidentStart
 ? new Date(
@@ -427,8 +426,6 @@ hour12: true
 })
 : "-"
 }
-</td>
-
 </td>
 
 
@@ -449,13 +446,12 @@ Incident End Date
 <td style="
 border:1px solid #444;
 padding:12px;
+width:25%;
 ">
-
-<td>
 ${
-incident.incidentDetails?.incidentStart
+incident.incidentDetails?.incidentEnd
 ? new Date(
-incident.incidentDetails.incidentStart
+incident.incidentDetails.incidentEnd
 ).toLocaleString("en-IN", {
 timeZone: "Asia/Kolkata",
 day: "2-digit",
@@ -467,8 +463,6 @@ hour12: true
 })
 : "-"
 }
-</td>
-
 </td>
 
 </tr>
