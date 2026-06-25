@@ -220,6 +220,36 @@ async function notifyIncident(incident, eventKind) {
    // }
 
     // SUBJECT LINE
+    const start =
+incident.incidentDetails?.incidentStart
+? new Date(incident.incidentDetails.incidentStart)
+: null;
+
+const end =
+incident.incidentDetails?.incidentEnd
+? new Date(incident.incidentDetails.incidentEnd)
+: null;
+
+let outageDuration = "N/A";
+
+if (start && end) {
+
+const diff =
+Math.floor((end - start) / 1000);
+
+const hrs =
+Math.floor(diff / 3600);
+
+const mins =
+Math.floor((diff % 3600) / 60);
+
+const secs =
+diff % 60;
+
+outageDuration =
+`${hrs}h ${mins}m ${secs}s`;
+}
+
     const subject =
       `OUTAGE | ${incident.severity} | ${incident.state} | ${incident.id} - ${incident.title}`;
 
@@ -379,7 +409,17 @@ border:1px solid #444;
 padding:12px;
 ">
 
-${incident.createdAt || "-"}
+<td>
+${
+incident.incidentDetails?.incidentStart
+? new Date(
+incident.incidentDetails.incidentStart
+).toLocaleString("en-US", {
+timeZone: "America/New_York"
+})
+: "-"
+}
+</td>
 
 </td>
 
@@ -401,7 +441,17 @@ border:1px solid #444;
 padding:12px;
 ">
 
-${incident.resolvedAt || "-"}
+<td>
+${
+incident.incidentDetails?.incidentEnd
+? new Date(
+incident.incidentDetails.incidentEnd
+).toLocaleString("en-US", {
+timeZone: "America/New_York"
+})
+: "-"
+}
+</td>
 
 </td>
 
@@ -428,7 +478,7 @@ padding:12px;
 text-align:center;
 ">
 
-${incident.duration || "00:00:00"}
+${outageDuration}
 
 </td>
 
@@ -604,9 +654,14 @@ line-height:1.8;
 <br><br>
 
 <b>
-${new Date().toLocaleTimeString()}
+${new Date(
+incident.updatedAt
+).toLocaleTimeString()}
+
 EST /
-${new Date().toLocaleTimeString("en-IN")}
+${new Date(
+incident.updatedAt
+).toLocaleTimeString("en-IN")}
 IST
 </b>
 
