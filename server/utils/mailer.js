@@ -666,12 +666,26 @@ line-height:1.8;
 <b>
 ${new Date(
 incident.updatedAt
-).toLocaleTimeString()}
+).toLocaleTimeString("en-US", {
+timeZone: "America/New_York",
+hour: "2-digit",
+minute: "2-digit",
+second: "2-digit",
+hour12: true
+})}
 
 EST /
+
 ${new Date(
 incident.updatedAt
-).toLocaleTimeString("en-IN")}
+).toLocaleTimeString("en-IN", {
+timeZone: "Asia/Kolkata",
+hour: "2-digit",
+minute: "2-digit",
+second: "2-digit",
+hour12: true
+})}
+
 IST
 </b>
 
